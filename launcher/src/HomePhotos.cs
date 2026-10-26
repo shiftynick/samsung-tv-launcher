@@ -20,7 +20,7 @@ public sealed partial class QuietHome
  List<LocalPhoto> PhotoItems=>photos==null?new List<LocalPhoto>():photos.Photos.Where(p=>photoAlbum==0||p.Album==photos.Albums[photoAlbum-1]).ToList();
  bool PhotoReady=>photoFront!=null&&photoFront.LoadingStatus==ImageView.LoadingStatusType.Ready;
  void OpenPhotos(){
-  try{photos=PhotoCatalog.Load(photosDirectory);photoError="";photoAlbum=Math.Clamp(photoAlbum,0,photos.Albums.Count);photoIndex=Math.Clamp(photoIndex,0,PhotoItems.Count-1);}
+  try{photos=PhotoCatalog.Load(photosDirectory);photoError="";photoAlbum=Math.Clamp(photoAlbum,0,photos.Albums.Count);photoIndex=Math.Clamp(photoIndex,0,Math.Max(0,PhotoItems.Count-1));}
   catch{photos=null;photoError="No readable local album is installed.";}
   page=4;area=1;editing="";BuildPage();WriteState("photos_opened");
  }

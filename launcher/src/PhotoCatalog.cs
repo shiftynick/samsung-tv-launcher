@@ -28,7 +28,7 @@ public sealed class PhotoCatalog
   using(var doc=JsonDocument.Parse(System.IO.File.ReadAllText(manifest))){
    Fields(doc.RootElement,"schemaVersion","photos");
    if(doc.RootElement.GetProperty("schemaVersion").GetInt32()!=1)throw new InvalidDataException("Unsupported photo version.");
-   var rows=doc.RootElement.GetProperty("photos");if(rows.ValueKind!=JsonValueKind.Array||rows.GetArrayLength()<1||rows.GetArrayLength()>200)throw new InvalidDataException("Photo count is outside bounds.");
+   var rows=doc.RootElement.GetProperty("photos");if(rows.ValueKind!=JsonValueKind.Array||rows.GetArrayLength()>200)throw new InvalidDataException("Photo count is outside bounds.");
    var photos=new List<LocalPhoto>();var files=new HashSet<string>();long bytes=0;
    foreach(var row in rows.EnumerateArray()){
     Fields(row,"file","album","caption");
@@ -43,7 +43,7 @@ public sealed class PhotoCatalog
    return new PhotoCatalog{Photos=photos};
   }
  }
- static void ValidateJpeg(string path){
+ internal static void ValidateJpeg(string path){
   using(var stream=System.IO.File.OpenRead(path)){
    if(stream.Length<10||stream.Length>4*1024*1024||stream.ReadByte()!=255||stream.ReadByte()!=216)throw new InvalidDataException("Invalid JPEG.");
    while(stream.Position<Math.Min(stream.Length,1024*1024)){

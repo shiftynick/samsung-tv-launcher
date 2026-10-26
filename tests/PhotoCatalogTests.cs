@@ -13,7 +13,8 @@ public static class PhotoCatalogTests
    string valid="{\"schemaVersion\":1,\"photos\":[{\"file\":\"images/photo-0001.jpg\",\"album\":\"Example\",\"caption\":\"Scenery\"}]}";
    File.WriteAllText(manifest,valid);var catalog=PhotoCatalog.Load(root);Check(catalog.Photos.Count==1&&catalog.Albums.Count==1,"Valid private album rejected");
    for(int count=1;count<=200;count++)for(int index=0;index<count;index++){Check(PhotoCatalog.Move(count,index,1)>=0&&PhotoCatalog.Move(count,index,1)<count,"Next out of bounds");Check(PhotoCatalog.Move(count,index,-1)>=0&&PhotoCatalog.Move(count,index,-1)<count,"Previous out of bounds");}
-   foreach(string bad in new[]{"{}",valid.Replace("schemaVersion\":1","schemaVersion\":2"),valid.Replace("images/photo-0001.jpg","../photo.jpg"),valid.Replace("images/photo-0001.jpg","https://example.com/photo.jpg"),valid.Replace("\"caption\":","\"unknown\":"),valid.Replace("Example",""),"{\"schemaVersion\":1,\"photos\":[]}"}){File.WriteAllText(manifest,bad);Reject(()=>PhotoCatalog.Load(root));}
+   foreach(string bad in new[]{"{}",valid.Replace("schemaVersion\":1","schemaVersion\":2"),valid.Replace("images/photo-0001.jpg","../photo.jpg"),valid.Replace("images/photo-0001.jpg","https://example.com/photo.jpg"),valid.Replace("\"caption\":","\"unknown\":"),valid.Replace("Example","")}){File.WriteAllText(manifest,bad);Reject(()=>PhotoCatalog.Load(root));}
+   File.WriteAllText(manifest,"{\"schemaVersion\":1,\"photos\":[]}");Check(PhotoCatalog.Load(root).Photos.Count==0,"An emptied album must load as empty");
    File.WriteAllText(manifest,valid);File.WriteAllBytes(photo,new byte[]{1,2,3});Reject(()=>PhotoCatalog.Load(root));File.WriteAllBytes(photo,jpeg);
    if(Path.DirectorySeparatorChar=='/'){
     string other=Path.Combine(root,"other.jpg");File.WriteAllBytes(other,jpeg);File.Delete(photo);File.CreateSymbolicLink(photo,other);Reject(()=>PhotoCatalog.Load(root));File.Delete(photo);File.WriteAllBytes(photo,jpeg);

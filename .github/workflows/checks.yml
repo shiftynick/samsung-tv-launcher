@@ -24,6 +24,8 @@ jobs:
       - name: Test native catalog logic without Samsung references
         run: dotnet run --project tests/CatalogTests.csproj -- launcher/assets/apps.json
 
+      - name: Test phone companion pairing, layout, photo store and HTTP API
+        run: dotnet run --project tests/CompanionTests.csproj
       - name: Test private photo catalog validation
         run: dotnet run --project tests/PhotoCatalogTests.csproj
       - name: Test theme preference persistence

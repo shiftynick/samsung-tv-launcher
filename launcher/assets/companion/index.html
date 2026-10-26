@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>TV Launcher</title>
+<style>
+:root{--bg:#0d1012;--card:#171c1f;--line:#2a3236;--ink:#f2efe6;--muted:#a5aca9;--accent:#ffb83d;--bad:#ff7a6b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px 48px}
+main{max-width:640px;margin:0 auto}
+h1{font-size:24px;margin:8px 0 4px}
+h2{font-size:18px;margin:0 0 12px}
+p{margin:0 0 12px;color:var(--muted)}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}
+label{display:block;font-size:14px;color:var(--muted);margin:10px 0 4px}
+input,select,button{font:inherit;color:inherit}
+input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0f1315}
+input:focus,select:focus{outline:2px solid var(--accent);border-color:transparent}
+button{padding:12px 16px;border-radius:10px;border:1px solid var(--line);background:#222a2e;cursor:pointer}
+button.primary{background:var(--accent);color:#1a1405;border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.5}
+.code{font-size:32px;letter-spacing:.3em;text-align:center}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{flex:1}
+.seg{display:flex;gap:6px}
+.seg button{flex:1}
+.seg button.on{background:var(--accent);color:#1a1405;border-color:var(--accent);font-weight:600}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.theme{padding:0;overflow:hidden;text-align:left;background:#0f1315}
+.theme img,.theme .ph{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#222}
+.theme span{display:block;padding:8px 10px}
+.theme.on{outline:3px solid var(--accent)}
+.apps{list-style:none;margin:0;padding:0}
+.apps li{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.apps li:last-child{border:0}
+.apps .name{flex:1}
+.apps .off .name{color:var(--muted);text-decoration:line-through}
+.apps button{padding:8px 12px}
+.slot{font-size:12px;color:var(--muted);width:4.5em}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.grid figure{margin:0;position:relative}
+.grid img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#222;display:block}
+.grid figcaption{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grid button{position:absolute;top:4px;right:4px;padding:2px 8px;font-size:13px;background:rgba(0,0,0,.65)}
+#toast{position:fixed;left:16px;right:16px;bottom:max(16px,env(safe-area-inset-bottom));max-width:608px;margin:0 auto;padding:12px 16px;border-radius:10px;background:#2b3338;display:none}
+#toast.bad{background:#5a221c}
+.hidden{display:none}
+small{color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+ <h1>TV Launcher</h1>
+ <div id="pair" class="hidden">
+  <section>
+   <h2>Pair this phone</h2>
+   <p>On the TV, open <b>Phone</b> from the Home screen. Enter the six-digit code it shows.</p>
+   <label for="code">Code</label>
+   <input id="code" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000 000">
+   <label for="phone">Name for this phone</label>
+   <input id="phone" maxlength="32" placeholder="Phone">
+   <p></p>
+   <button id="pairButton" class="primary" style="width:100%">Pair</button>
+  </section>
+ </div>
+ <div id="app" class="hidden">
+  <section>
+   <h2>Theme</h2>
+   <div id="themes" class="themes"></div>
+  </section>
+  <section>
+   <h2>Motion</h2>
+   <div id="motion" class="seg"></div>
+  </section>
+  <section>
+   <h2>Home tiles</h2>
+   <p>The first <span id="slots">6</span> visible apps appear on Home. All apps stay in Apps.</p>
+   <ul id="apps" class="apps"></ul>
+   <p></p>
+   <button id="saveTiles" class="primary">Save tiles</button>
+  </section>
+  <section>
+   <h2>HDMI shortcut</h2>
+   <div class="row">
+    <div><label for="hdmiLabel">Name</label><input id="hdmiLabel" maxlength="16"></div>
+    <div><label for="hdmiSource">Input</label><select id="hdmiSource"></select></div>
+   </div>
+   <p></p>
+   <button id="saveHdmi" class="primary">Save shortcut</button>
+  </section>
+  <section>
+   <h2>Photos</h2>
+   <p>Photos are resized for the TV and saved without location or camera details. Portrait photos get a blurred background.</p>
+   <label for="album">Album</label>
+   <select id="album"></select>
+   <input id="newAlbum" class="hidden" maxlength="100" placeholder="New album name" style="margin-top:8px">
+   <label for="caption">Caption (optional, applies to this upload)</label>
+   <input id="caption" maxlength="160">
+   <p></p>
+   <input id="files" type="file" accept="image/*" multiple class="hidden">
+   <button id="pick" class="primary" style="width:100%">Choose photos</button>
+   <p id="photoSummary" style="margin-top:12px"></p>
+   <div id="gallery" class="grid"></div>
+  </section>
+  <p><button id="unpair">Unpair this phone</button></p>
+ </div>
+</main>
+<div id="toast" role="status"></div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let token=localStorage.getItem("tvToken")||"",state=null,apps=[],toastTimer=0;
+const blobUrls=new Map();
+
+function toast(text,bad){const t=$("toast");t.textContent=text;t.className=bad?"bad":"";t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",bad?6000:2500);}
+async function api(method,path,body,type){
+ const headers={};if(token)headers.Authorization="Bearer "+token;
+ if(body!==undefined&&!type){headers["Content-Type"]="application/json";body=JSON.stringify(body);}else if(type)headers["Content-Type"]=type;
+ let r;try{r=await fetch(path,{method,headers,body});}catch(e){throw new Error("The TV did not answer. Is it on and on this Wi-Fi?");}
+ if(r.status===401){token="";localStorage.removeItem("tvToken");show();throw new Error("This phone needs to be paired again.");}
+ const kind=r.headers.get("Content-Type")||"";
+ if(!r.ok){let m="The TV refused that ("+r.status+").";if(kind.startsWith("application/json"))m=(await r.json()).error||m;throw new Error(m);}
+ return kind.startsWith("application/json")?r.json():r.blob();
+}
+async function image(path){if(blobUrls.has(path))return blobUrls.get(path);const url=URL.createObjectURL(await api("GET",path));blobUrls.set(path,url);return url;}
+function el(tag,props,...kids){const e=document.createElement(tag);Object.assign(e,props||{});for(const k of kids)e.append(k);return e;}
+
+function show(){$("pair").classList.toggle("hidden",!!token);$("app").classList.toggle("hidden",!token);if(token)load();}
+$("pairButton").onclick=async()=>{
+ const code=$("code").value.replace(/\D/g,"");if(code.length!==6){toast("Enter the six digits shown on the TV.",true);return;}
+ $("pairButton").disabled=true;
+ try{const r=await api("POST","/api/pair",{code,name:$("phone").value||guessName()});token=r.token;localStorage.setItem("tvToken",token);$("code").value="";show();toast("Paired.");}
+ catch(e){toast(e.message,true);}finally{$("pairButton").disabled=false;}
+};
+function guessName(){const u=navigator.userAgent;return /iPhone/.test(u)?"iPhone":/iPad/.test(u)?"iPad":/Android/.test(u)?"Android phone":"Phone";}
+$("unpair").onclick=async()=>{try{await api("POST","/api/unpair");}catch(e){}token="";localStorage.removeItem("tvToken");show();};
+
+async function load(){
+ try{state=await api("GET","/api/state");}catch(e){toast(e.message,true);return;}
+ renderThemes();renderMotion();
+ apps=state.apps.map(a=>({...a}));renderApps();$("slots").textContent=state.homeSlots;
+ $("hdmiLabel").value=state.hdmiLabel;$("hdmiSource").replaceChildren(...state.hdmiInputs.map(i=>el("option",{value:i.source,textContent:i.name,selected:i.source===state.hdmiSource})));
+ loadPhotos();
+}
+function renderThemes(){
+ $("themes").replaceChildren(...state.themes.map(t=>{
+  const img=el("div",{className:"ph"});
+  const b=el("button",{className:"theme"+(t.id===state.theme?" on":""),onclick:()=>setTheme(t.id)},img,el("span",{textContent:t.name}));
+  if(t.preview)image("/api/themes/"+t.id+"/preview").then(u=>img.replaceWith(el("img",{src:u,alt:""}))).catch(()=>{});
+  return b;}));
+}
+async function setTheme(id){try{await api("PUT","/api/theme",{id});state.theme=id;renderThemes();toast("Theme changed on the TV.");}catch(e){toast(e.message,true);}}
+function renderMotion(){
+ $("motion").replaceChildren(...["off","subtle","full"].map(m=>el("button",{className:m===state.motion?"on":"",textContent:m[0].toUpperCase()+m.slice(1),onclick:async()=>{try{await api("PUT","/api/motion",{mode:m});state.motion=m;renderMotion();}catch(e){toast(e.message,true);}}})));
+}
+function renderApps(){
+ let slot=0;
+ $("apps").replaceChildren(...apps.map((a,i)=>{
+  const onHome=!a.hidden&&slot<state.homeSlots;if(!a.hidden)slot++;
+  return el("li",{className:a.hidden?"off":""},
+   el("span",{className:"slot",textContent:a.hidden?"Hidden":onHome?"Home "+slot:"Apps only"}),
+   el("span",{className:"name",textContent:a.name}),
+   el("button",{textContent:"↑",ariaLabel:"Move "+a.name+" up",disabled:i===0,onclick:()=>{[apps[i-1],apps[i]]=[apps[i],apps[i-1]];renderApps();}}),
+   el("button",{textContent:"↓",ariaLabel:"Move "+a.name+" down",disabled:i===apps.length-1,onclick:()=>{[apps[i+1],apps[i]]=[apps[i],apps[i+1]];renderApps();}}),
+   el("button",{textContent:a.hidden?"Show":"Hide",onclick:()=>{a.hidden=!a.hidden;renderApps();}}));
+ }));
+}
+function layout(){return {order:apps.map(a=>a.id),hidden:apps.filter(a=>a.hidden).map(a=>a.id),hdmiLabel:$("hdmiLabel").value.trim(),hdmiSource:Number($("hdmiSource").value)};}
+async function saveLayout(what){try{await api("PUT","/api/layout",layout());toast(what+" saved on the TV.");}catch(e){toast(e.message,true);}}
+$("saveTiles").onclick=()=>saveLayout("Tiles");
+$("saveHdmi").onclick=()=>saveLayout("Shortcut");
+
+let photos=[];
+async function loadPhotos(){
+ let r;try{r=await api("GET","/api/photos");}catch(e){$("photoSummary").textContent=e.message;return;}
+ photos=r.photos;
+ const albums=[...new Set(photos.map(p=>p.album))],current=$("album").value;
+ $("album").replaceChildren(...albums.map(a=>el("option",{value:a,textContent:a})),el("option",{value:"",textContent:"New album…"}));
+ $("album").value=albums.includes(current)?current:albums.length?albums[0]:"";$("album").onchange();
+ $("photoSummary").textContent=photos.length+" of "+r.maxPhotos+" photos · "+(r.bytes/1048576).toFixed(1)+" of "+(r.maxBytes/1048576)+" MB used";
+ $("gallery").replaceChildren(...photos.slice().reverse().map(p=>{
+  const img=el("img",{alt:p.caption||p.album,loading:"lazy"});
+  image("/api/photos/"+p.file).then(u=>img.src=u).catch(()=>{});
+  return el("figure",{},img,el("button",{textContent:"✕",ariaLabel:"Delete photo",onclick:()=>removePhoto(p)}),el("figcaption",{textContent:p.album+(p.caption?" · "+p.caption:"")}));
+ }));
+}
+$("album").onchange=()=>$("newAlbum").classList.toggle("hidden",$("album").value!=="");
+async function removePhoto(p){if(!confirm("Delete this photo from the TV?"))return;try{await api("DELETE","/api/photos/"+p.file);blobUrls.delete("/api/photos/"+p.file);loadPhotos();}catch(e){toast(e.message,true);}}
+$("pick").onclick=()=>{const album=($("album").value||$("newAlbum").value).trim();if(!album){toast("Name the new album first.",true);return;}$("files").click();};
+$("files").onchange=async()=>{
+ const files=[...$("files").files];$("files").value="";if(!files.length)return;
+ const album=($("album").value||$("newAlbum").value).trim(),caption=$("caption").value.trim();
+ $("pick").disabled=true;let done=0,failed=0;
+ for(const f of files){
+  $("pick").textContent="Sending "+(done+failed+1)+" of "+files.length+"…";
+  try{const jpeg=await prepare(f);await api("POST","/api/photos?album="+encodeURIComponent(album)+"&caption="+encodeURIComponent(caption),jpeg,"image/jpeg");done++;}
+  catch(e){failed++;toast(f.name+": "+e.message,true);}
+ }
+ $("pick").disabled=false;$("pick").textContent="Choose photos";$("newAlbum").value="";
+ if(done)toast(done+(done===1?" photo":" photos")+" added to "+album+(failed?" · "+failed+" failed":""),!!failed);
+ await loadPhotos();$("album").value=album;$("album").onchange();
+};
+// Draw onto a canvas no larger than 1920x1080. Canvas output carries no EXIF/GPS metadata.
+async function prepare(file){
+ let src;
+ try{src=await createImageBitmap(file,{imageOrientation:"from-image"});}
+ catch(e){src=await new Promise((ok,bad)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>bad(new Error("This file is not a readable photo."));i.src=URL.createObjectURL(file);});}
+ const w=src.width,h=src.height;let cw,ch;
+ if(w>h*1.0001){const s=Math.min(1,1920/w,1080/h);cw=Math.round(w*s);ch=Math.round(h*s);if(cw<=ch)cw=ch+1;}
+ else{cw=1920;ch=1080;}
+ const c=document.createElement("canvas");c.width=cw;c.height=ch;const g=c.getContext("2d");
+ if(cw===1920&&ch===1080&&w<=h*1.0001){
+  const s=Math.max(cw/w,ch/h);
+  if("filter" in g)g.filter="blur(40px)";
+  g.drawImage(src,(cw-w*s)/2,(ch-h*s)/2,w*s,h*s);g.filter="none";
+  g.fillStyle="rgba(0,0,0,.55)";g.fillRect(0,0,cw,ch);
+  const f=Math.min(cw/w,ch/h);g.drawImage(src,(cw-w*f)/2,(ch-h*f)/2,w*f,h*f);
+ }else g.drawImage(src,0,0,cw,ch);
+ if(src.close)src.close();
+ for(const q of [.88,.78,.65]){const b=await new Promise(ok=>c.toBlob(ok,"image/jpeg",q));if(b&&b.size<4*1024*1024)return b;}
+ throw new Error("The photo is too large after resizing.");
+}
+// A scanned QR code carries the pairing code in the fragment, which never leaves the phone.
+const scanned=(location.hash.match(/^#(\d{6})$/)||[])[1];
+if(scanned)history.replaceState(null,"",location.pathname);
+show();
+if(scanned&&!token){$("code").value=scanned;$("pairButton").click();}
+</script>
+</body>
+</html>
