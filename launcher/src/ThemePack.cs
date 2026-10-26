@@ -20,6 +20,14 @@ public sealed class ThemePalette
  public string Footer {get;set;}="#000000B3";
 }
 
+public sealed class ThemeMotion
+{
+ public string Effect {get;set;}="none";
+ public int Count {get;set;}=10;
+ public int Seconds {get;set;}=16;
+ public bool IconFloat {get;set;}=true;
+}
+
 // Data-only theme format shared by the TV and host authoring/validation tool.
 public sealed class ThemePack
 {
@@ -34,6 +42,7 @@ public sealed class ThemePack
  public int CornerRadius {get;set;}=18;
  public bool PixelArt {get;set;}
  public int AnimationMs {get;set;}=160;
+ public ThemeMotion Motion {get;set;}=new ThemeMotion();
  public string FontFamily {get;set;}="Quiet Inter";
  public bool FontVariants {get;set;}=true;
  public string FontFile {get;set;}
@@ -45,7 +54,8 @@ public sealed class ThemePack
  [JsonIgnore] public string PreviewPath=>Asset(Preview??Background);
  [JsonIgnore] public string FontPath=>Asset(FontFile);
  public static readonly JsonSerializerOptions JsonOptions=new JsonSerializerOptions{PropertyNamingPolicy=JsonNamingPolicy.CamelCase,WriteIndented=true};
- static readonly HashSet<string> Fields=new HashSet<string>{"schemaVersion","id","name","order","background","preview","icons","palette","cornerRadius","pixelArt","animationMs","fontFamily","fontVariants","fontFile","fontLicense","license"};
+ static readonly HashSet<string> Fields=new HashSet<string>{"schemaVersion","id","name","order","background","preview","icons","palette","cornerRadius","pixelArt","animationMs","motion","fontFamily","fontVariants","fontFile","fontLicense","license"};
+ static readonly HashSet<string> MotionFields=new HashSet<string>{"effect","count","seconds","iconFloat"};
  static readonly HashSet<string> PaletteFields=new HashSet<string>{"background","text","muted","accent","card","control","caption","overlay","header","footer"};
  public static bool ValidId(string id)=>id!=null&&Regex.IsMatch(id,@"\A[a-z0-9][a-z0-9-]{0,47}\z");
  public string IconPath(string key)=>key!=null&&Icons.TryGetValue(key,out var file)?Asset(file):null;
@@ -106,6 +116,7 @@ public sealed class ThemePack
    ObjectFields(document.RootElement,Fields,"theme");
    foreach(string required in new[]{"schemaVersion","id","name"})if(!document.RootElement.TryGetProperty(required,out _))throw new InvalidDataException("Missing theme field: "+required);
    if(document.RootElement.TryGetProperty("palette",out var palette))ObjectFields(palette,PaletteFields,"palette");
+   if(document.RootElement.TryGetProperty("motion",out var motion))ObjectFields(motion,MotionFields,"motion");
    if(document.RootElement.TryGetProperty("icons",out var icons))ObjectFields(icons,null,"icons");
   }
   var pack=JsonSerializer.Deserialize<ThemePack>(text,JsonOptions);
@@ -114,6 +125,7 @@ public sealed class ThemePack
   if(pack.Order<0||pack.Order>1000||pack.CornerRadius<0||pack.CornerRadius>40||pack.AnimationMs<0||pack.AnimationMs>250)throw new InvalidDataException("Invalid style bounds.");
   if(string.IsNullOrWhiteSpace(pack.FontFamily)||pack.FontFamily.Length>64||pack.FontFamily.Any(char.IsControl)||pack.Palette==null||pack.Icons==null||pack.Icons.Count>64)throw new InvalidDataException("Invalid typography, palette or icon map.");
   foreach(var color in new[]{pack.Palette.Background,pack.Palette.Text,pack.Palette.Muted,pack.Palette.Accent,pack.Palette.Card,pack.Palette.Control,pack.Palette.Caption,pack.Palette.Overlay,pack.Palette.Header,pack.Palette.Footer})Color(color);
+  if(pack.Motion==null||!new[]{"none","fireflies","dust","rain","stars"}.Contains(pack.Motion.Effect)||pack.Motion.Count<0||pack.Motion.Count>18||pack.Motion.Seconds<8||pack.Motion.Seconds>60)throw new InvalidDataException("Invalid motion profile.");
   long pixelBudget=0,encodedBudget=0;
   var uniqueFiles=new HashSet<string>();
   var images=new List<string>();if(pack.Background!=null)images.Add(pack.Background);if(pack.Preview!=null)images.Add(pack.Preview);
@@ -138,7 +150,7 @@ public sealed class ThemeCatalog
  public IReadOnlyList<ThemePack> Items=>items;
  public IReadOnlyList<string> Errors=>errors;
  public ThemePack Find(string id)=>items.Find(p=>p.Id==id);
- public string FallbackId=>"neutral";
+ public string FallbackId=>Find("cinema")!=null?"cinema":items[0].Id;
  public static ThemeCatalog Discover(params string[] roots)
  {
   var catalog=new ThemeCatalog();
@@ -159,7 +171,7 @@ public sealed class ThemeCatalog
     }catch(Exception error)when(error is InvalidDataException||error is IOException||error is UnauthorizedAccessException||error is JsonException||error is ArgumentException){catalog.errors.Add(Path.GetFileName(directory)+": "+error.Message);}
    }
   }
-  if(catalog.Find("neutral")==null)catalog.items.Add(ThemePack.Neutral());
+  if(catalog.items.Count==0)catalog.items.Add(ThemePack.Neutral());
   catalog.items.Sort((a,b)=>{int c=a.Order.CompareTo(b.Order);return c==0?StringComparer.Ordinal.Compare(a.Name,b.Name):c;});
   return catalog;
  }

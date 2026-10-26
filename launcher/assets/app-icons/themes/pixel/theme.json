@@ -31,5 +31,11 @@
   "fontVariants": false,
   "fontFile": "fonts/PressStart2P-Regular.ttf",
   "fontLicense": "fonts/OFL.txt",
-  "license": "LICENSE.txt"
+  "license": "LICENSE.txt",
+  "motion": {
+    "effect": "stars",
+    "count": 10,
+    "seconds": 18,
+    "iconFloat": false
+  }
 }

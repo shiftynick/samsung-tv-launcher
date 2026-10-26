@@ -1,6 +1,6 @@
 # Create and add theme packs
 
-Theme packs are data folders, discovered at runtime. Adding art or a palette does not require rebuilding the TV launcher. The initial installation of a launcher version supporting packs is still required. Five packs ship with it: Neutral, Cinematic, 8-bit Jungle, Fossil Club and Dino Den. The picker paginates automatically.
+Theme packs are data folders, discovered at runtime. Adding art or a palette does not require rebuilding the TV launcher. The initial installation of a launcher version supporting packs is still required. Five illustrated packs ship with it: Cinematic, 8-bit Jungle, Fossil Club, Dino Den and Neon District. The picker paginates automatically.
 
 ## Create, clone and validate
 
@@ -62,13 +62,30 @@ A minimal pack requires only a schema version, ID and display name. Missing imag
 }
 ```
 
-Omit `background` and `icons` to use the starter without images. Individual missing icon mappings fall back to app monograms, while labels remain native text. If an image is declared, the file must exist and pass validation. `preview` optionally points to a separate PNG for the picker; otherwise it uses the background. A missing/corrupt selected pack falls back to Neutral rather than preventing Home from opening.
+Omit `background` and `icons` to use the starter without images. Individual missing icon mappings fall back to app monograms, while labels remain native text. If an image is declared, the file must exist and pass validation. `preview` optionally points to a separate PNG for the picker; otherwise it uses the background. A missing/corrupt selected pack falls back to Cinematic when available, then the first valid pack. Only when no valid packs remain does an embedded flat recovery screen appear; a plain theme is not included in normal selection.
 
 Colors use `#RRGGBB` or `#RRGGBBAA`. Use high-contrast text and test the visible result; the parser checks syntax, not perceptual contrast. `pixelArt` selects nearest-neighbor sampling and compact pixel typography; set animationMs to zero for no focus animation. `fontVariants: true` uses the bundled family suffixes Medium/Semibold/Display. For a single custom font set it false, declare its exact family name, and include `fontFile` plus `fontLicense` relative paths. Fonts must be TTF; their licenses remain separate. A theme's optional `license` file is included when cloning/exporting.
 
+## Motion
+
+Optional native effects are declared as data, with no video player or pack scripts:
+
+```json
+"motion": {
+  "effect": "fireflies",
+  "count": 10,
+  "seconds": 18,
+  "iconFloat": true
+}
+```
+
+Effects: `none`, `fireflies`, `dust`, `rain`, or `stars`. They use small native colored shapes and position/opacity loops; they do not animate individual objects inside a flattened wallpaper. Count is bounded to 0–18 and loop duration to 8–60 seconds (individual loops are staggered by up to four seconds). Subtle shows at most six particles; Full shows up to eighteen. The selected app icon floats by two/four pixels when enabled. Pixel packs may opt out of icon float.
+
+Home's Motion control cycles Off / Subtle / Full, stored independently of theme selection. Off also disables animated focus transitions. Ambient/icon loops run only on Home while foregrounded, pause behind apps/HDMI, and are disposed on page/theme changes. No per-frame managed timer or network asset loading is used. `animationMs` controls focus transitions separately; set Motion Off to disable all animation. Existing packs without a motion block get no ambient particles.
+
 ## Bounds and rejection
 
-- Unique lowercase IDs of up to 48 characters, schema version 1, display names up to 40 characters, and at most 64 discovered packs plus the recovery fallback.
+- Unique lowercase IDs of up to 48 characters, schema version 1, display names up to 40 characters, and at most 64 discovered packs. An embedded recovery screen is used only when none are valid.
 - PNG images only: maximum edge 3840, maximum individual pixels 8,294,400, maximum file size 16 MiB. Total referenced image pixels must not exceed 16,777,216 (64 MiB at four bytes/pixel); unique encoded image files must not exceed 64 MiB.
 - The PNG checker checks headers/chunk structure and bounds; native decoding still determines whether image data renders. Deleted images fall back safely. Preview decode dimensions are explicitly capped in the UI.
 - Manifests at most 64 KiB; fonts at most 2 MiB; license files at most 64 KiB. Corner radius is 0–40 and animation duration 0–250 ms.

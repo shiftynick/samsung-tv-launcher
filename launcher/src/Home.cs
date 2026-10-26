@@ -8,7 +8,7 @@ using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 using Tizen.Applications;
 
-public sealed class QuietHome : NUIApplication
+public sealed partial class QuietHome : NUIApplication
 {
  const string Root="/opt/usr/apps/com.samsung.tv.bixby-promotion/res/quiet-home/";
  const string StateFile="/tmp/quiet-home-state.txt";
@@ -72,6 +72,8 @@ public sealed class QuietHome : NUIApplication
   try{fontLoaded=FontClient.Instance.AddCustomFontDirectory(Root+"fonts");}catch{fontLoaded=false;}
   try{library=AppLibrary.Load(Root+"apps.json");}catch(Exception ex){libraryError=ex.Message;}
   themePath=System.IO.Path.Combine(Tizen.Applications.Application.Current.DirectoryInfo.Data,"launcher-theme.txt");
+  motionPath=System.IO.Path.Combine(Tizen.Applications.Application.Current.DirectoryInfo.Data,"launcher-motion.txt");
+  motion=MotionPreference.Load(motionPath);
   userThemesDirectory=System.IO.Path.Combine(Tizen.Applications.Application.Current.DirectoryInfo.Data,"themes");
   ReloadThemes();theme=ThemePreference.Load(themePath,themes);currentTheme=themes.Find(theme);ApplyPalette();RegisterThemeFont();
   Window.Default.BackgroundColor=new Color(.02f,.03f,.03f,1);
@@ -81,10 +83,10 @@ public sealed class QuietHome : NUIApplication
   clockTimer=new Tizen.NUI.Timer(30000);
   clockTimer.Tick+=(s,e)=>{if(clock!=null)clock.Text=DateTime.Now.ToString("h:mm tt");return true;};clockTimer.Start();WriteState("created");
  }
- protected override void OnResume(){base.OnResume();clockTimer?.Start();RefreshSource();if(tabs!=null&&page==2){RefreshSettings();UpdateFocus(false);}WriteState("resumed");}
- protected override void OnAppControlReceived(AppControlReceivedEventArgs e){base.OnAppControlReceived(e);string requested;string requestedTheme;if(e.ReceivedAppControl.ExtraData.TryGet("quiet_theme",out requestedTheme)){SetTheme(requestedTheme);return;} if(e.ReceivedAppControl.ExtraData.TryGet("quiet_page",out requested)&&requested=="settings")OpenSettings("settings_request");else if(requested=="apps"){page=1;area=1;selected=0;BuildPage();}else if(requested=="themes"){OpenThemes();}else Home("home_request");}
- protected override void OnPause(){base.OnPause();editing="";clockTimer?.Stop();WriteState("paused");}
- void Home(string activity){clockTimer?.Start();RefreshSource();if(tabs!=null){bool unchanged=page==0&&area==1&&editing==""&&selected==SourceIndex();page=0;area=1;editing="";selected=SourceIndex();if(!unchanged)BuildPage();WriteState(activity);}}
+ protected override void OnResume(){base.OnResume();foreground=true;ResumeMotion();clockTimer?.Start();RefreshSource();if(tabs!=null&&page==2){RefreshSettings();UpdateFocus(false);}WriteState("resumed");}
+ protected override void OnAppControlReceived(AppControlReceivedEventArgs e){base.OnAppControlReceived(e);string requested;string requestedTheme;string requestedMotion;if(e.ReceivedAppControl.ExtraData.TryGet("quiet_motion",out requestedMotion)){SetMotion(requestedMotion);return;}if(e.ReceivedAppControl.ExtraData.TryGet("quiet_theme",out requestedTheme)){SetTheme(requestedTheme);return;} if(e.ReceivedAppControl.ExtraData.TryGet("quiet_page",out requested)&&requested=="settings")OpenSettings("settings_request");else if(requested=="apps"){page=1;area=1;selected=0;BuildPage();}else if(requested=="themes"){OpenThemes();}else Home("home_request");}
+ protected override void OnPause(){base.OnPause();foreground=false;PauseMotion();editing="";clockTimer?.Stop();WriteState("paused");}
+ void Home(string activity){foreground=true;ResumeMotion();clockTimer?.Start();RefreshSource();if(tabs!=null){bool unchanged=page==0&&area==1&&editing==""&&selected==SourceIndex();page=0;area=1;editing="";selected=SourceIndex();if(!unchanged)BuildPage();WriteState(activity);}}
  void OpenSettings(string activity){clockTimer?.Start();page=2;area=1;selected=0;editing="";BuildPage();WriteState(activity);}
  void RefreshSource(){try{int n;if(vconf_get_int("memory/system/source_type",out n)==0&&n>=13&&n<=15)lastSource=n;}catch{}}
  int SourceIndex(){return 0;}
@@ -97,11 +99,13 @@ public sealed class QuietHome : NUIApplication
  void BuildPage()
  {
   var stopwatch=Stopwatch.StartNew();
+  ClearMotion();
   if(focusAnimation!=null){focusAnimation.Stop();focusAnimation.Dispose();focusAnimation=null;}
   ParkArtwork();pageArtworkCold=0;
   foreach(var v in scene){Window.Default.Remove(v);v.Dispose();}scene.Clear();slots.Clear();
   Panel(0,0,1920,1080,Palette(currentTheme.Palette.Background),0);
   if(currentTheme.BackgroundPath!=null)Add(new ImageView{ResourceUrl=currentTheme.BackgroundPath,Size2D=new Size2D(1920,1080),DesiredWidth=1920,DesiredHeight=1080,FittingMode=FittingModeType.ScaleToFill,SamplingMode=Pixel?SamplingModeType.BoxThenNearest:SamplingModeType.BoxThenLanczos});
+  BuildAmbientMotion();
   if(page!=0)Panel(0,0,1920,1080,Palette(currentTheme.Palette.Overlay),0);
   if(page==0){Panel(0,0,1920,150,Palette(currentTheme.Palette.Header),0);Panel(0,850,1920,230,Palette(currentTheme.Palette.Footer),0);}
   tabs=new TextLabel[4];string[] nav={"Home","Apps","Settings","Themes"};int[] tx={70,238,406,632};int[] tw={148,148,206,180};
@@ -109,11 +113,12 @@ public sealed class QuietHome : NUIApplication
   clock=Text(DateTime.Now.ToString("h:mm tt"),1500,66,340,45,Pixel?20:27,ink);clock.HorizontalAlignment=HorizontalAlignment.End;
   if(page==0){
    for(int i=0;i<library.Count;i++)HomeTile(library[i].Name,"app:"+library[i].Id,library[i],80+i*298,470,272,272,0);
-   HomeTile("HDMI 3","hdmi:15",null,80,920,320,64,1);
-   HomeTile("Inputs","app:org.tizen.SMSourceAPP",null,430,920,280,64,1);
-   HomeTile("Themes","page:3",null,740,920,280,64,1);
-   HomeTile("Settings","page:2",null,1050,920,280,64,1);
-   HomeTile("Samsung Home","app:com.samsung.tv.csfs",null,1360,920,480,64,1);
+   HomeTile("HDMI 3","hdmi:15",null,80,920,260,64,1);
+   HomeTile("Inputs","app:org.tizen.SMSourceAPP",null,364,920,220,64,1);
+   HomeTile("Themes","page:3",null,608,920,220,64,1);
+   HomeTile("Motion: "+MotionName,"motion",null,852,920,300,64,1);
+   HomeTile("Settings","page:2",null,1176,920,240,64,1);
+   HomeTile("Samsung Home","app:com.samsung.tv.csfs",null,1440,920,400,64,1);
   }else if(page==1){
    BuildLibrary();
   }else if(page==3){
@@ -140,7 +145,7 @@ public sealed class QuietHome : NUIApplication
  void RegisterThemeFont(){try{if(currentTheme.FontPath!=null)FontClient.Instance.AddCustomFontDirectory(System.IO.Path.GetDirectoryName(currentTheme.FontPath));}catch{}}
  void ApplyPalette(){ink=Palette(currentTheme.Palette.Text);muted=Palette(currentTheme.Palette.Muted);accent=Palette(currentTheme.Palette.Accent);}
  void ReloadThemes(){themes=ThemeCatalog.Discover(Root+"app-icons/themes",userThemesDirectory);}
- void ClearArtwork(){ParkArtwork();foreach(var cached in artworkCache.Values){cached.Parent.Remove(cached.Image);cached.Image.Dispose();}artworkCache.Clear();artworkViewsCreated=0;}
+ void ClearArtwork(){StopIconMotion();ParkArtwork();foreach(var cached in artworkCache.Values){cached.Parent.Remove(cached.Image);cached.Image.Dispose();}artworkCache.Clear();artworkViewsCreated=0;}
  void UseTheme(ThemePack pack){ClearArtwork();currentTheme=pack;theme=pack.Id;ApplyPalette();RegisterThemeFont();PreloadThemeArtwork();}
  void OpenThemes(bool focusCards=true)
  {
@@ -307,7 +312,7 @@ public sealed class QuietHome : NUIApplication
  void UpdateFocus(bool animate=true)
  {
   if(focusAnimation!=null){focusAnimation.Stop();focusAnimation.Dispose();focusAnimation=null;}
-  if(animate&&currentTheme.AnimationMs>0)focusAnimation=new Animation(currentTheme.AnimationMs);
+  if(animate&&motion!="off"&&foreground&&currentTheme.AnimationMs>0)focusAnimation=new Animation(currentTheme.AnimationMs);
   else animate=false;
   for(int i=0;i<4;i++){tabs[i].TextColor=i==page?ink:muted;tabs[i].FontFamily=ThemeFont(i==page?"Semibold":"Medium");tabs[i].BackgroundColor=area==0&&i==page?new Color(accent.R,accent.G,accent.B,.22f):new Color(0,0,0,0);tabs[i].CornerRadius=new Vector4(Radius,Radius,Radius,Radius);}
   for(int i=0;i<slots.Count;i++){
@@ -323,6 +328,7 @@ public sealed class QuietHome : NUIApplication
    if(f)s.Card.RaiseToTop();
   }
   if(animate&&focusAnimation!=null)focusAnimation.Play();
+  UpdateIconMotion();
   clock.Opacity=1;
   detail.Text=page==1&&area==1&&slots[selected].Row>=0?slots[selected].Name+" · "+slots[selected].Description:area==0?"":area==2?slots[selected].Name:"";
   if(page==2){
@@ -390,6 +396,7 @@ public sealed class QuietHome : NUIApplication
  void Activate()
  {
   string a=slots[selected].Action;notice.Text="";
+  if(a=="motion"){SetMotion(MotionPreference.Next(motion));return;}
   if(a.StartsWith("theme:")){SetTheme(a.Substring(6));return;}
   if(a.StartsWith("hdmi:")){SelectSource(int.Parse(a.Substring(5)));return;}
   if(a.StartsWith("page:")){page=int.Parse(a.Substring(5));if(page==3){OpenThemes();return;}selected=page==0?SourceIndex():0;area=1;BuildPage();return;}
@@ -437,9 +444,9 @@ public sealed class QuietHome : NUIApplication
     if(r==0)r=app_control_add_extra_data(c,"__K_EX_FORCE_BOOST","enable");
     if(r==0)r=app_control_add_extra_data(c,"__K_SPLASH_SCREEN","LA_UI_VR_TRANSPARENT");
    }
-   if(r==0)r=app_control_send_launch_request(c,IntPtr.Zero,IntPtr.Zero);WriteState("launch:"+id+(menuItem==null?"":":"+menuItem)+":"+r);if(r!=0)ShowError("Could not open this screen. Try Advanced settings.");}finally{app_control_destroy(c);}
+   if(r==0){PauseMotion();r=app_control_send_launch_request(c,IntPtr.Zero,IntPtr.Zero);if(r!=0)ResumeMotion();}WriteState("launch:"+id+(menuItem==null?"":":"+menuItem)+":"+r);if(r!=0)ShowError("Could not open this screen. Try Advanced settings.");}finally{app_control_destroy(c);}
  }
  void ShowError(string text){notice.Text=text;}
- void WriteState(string activity){try{File.WriteAllText(StateFile,DateTime.UtcNow.ToString("o")+"\npage="+page+"\nselected="+selected+"\narea="+area+"\nactivity="+activity+"\nkey="+lastKey+"\nfont_loaded="+fontLoaded+"\nstyle=theme-pack\ntheme="+theme+"\ntheme_path="+themePath+"\ntheme_save_error="+themeSaveError+"\ntheme_count="+themes.Items.Count+"\ntheme_page="+themePage+"\ntheme_errors="+string.Join(";",themes.Errors)+"\nbuild_ms="+buildMilliseconds+"\nlibrary_page="+libraryPage+"\nlibrary_count="+library.Count+"\nlibrary_error="+libraryError+"\nselected_name="+(selected>=0&&selected<slots.Count?slots[selected].Name:"")+"\nartwork_cached="+artworkCache.Count+"\nartwork_ready="+ArtworkReadyCount()+"\nartwork_pending="+ArtworkPending()+"\nartwork_views_created="+artworkViewsCreated+"\npage_artwork_cold="+pageArtworkCold+"\nprocess_id="+Process.GetCurrentProcess().Id+"\nediting="+editing+"\nvolume="+currentVolume+"\nmute="+currentMute+"\nbrightness="+SettingValue("brightness")+"\ngame-mode="+SettingValue("game-mode")+"\nsleeptimer="+SettingValue("sleeptimer")+"\n");}catch{}}
+ void WriteState(string activity){try{File.WriteAllText(StateFile,DateTime.UtcNow.ToString("o")+"\npage="+page+"\nselected="+selected+"\narea="+area+"\nactivity="+activity+"\nkey="+lastKey+"\nfont_loaded="+fontLoaded+"\nstyle=theme-pack\ntheme="+theme+"\ntheme_path="+themePath+"\ntheme_save_error="+themeSaveError+"\ntheme_count="+themes.Items.Count+"\ntheme_page="+themePage+"\ntheme_errors="+string.Join(";",themes.Errors)+"\nmotion="+motion+"\nmotion_active="+MotionActive+"\nmotion_particles="+particleCount+"\nmotion_animations="+ambientAnimations.Count+"\nicon_motion="+(iconAnimation!=null)+"\nmotion_error="+motionError+"\nbuild_ms="+buildMilliseconds+"\nlibrary_page="+libraryPage+"\nlibrary_count="+library.Count+"\nlibrary_error="+libraryError+"\nselected_name="+(selected>=0&&selected<slots.Count?slots[selected].Name:"")+"\nartwork_cached="+artworkCache.Count+"\nartwork_ready="+ArtworkReadyCount()+"\nartwork_pending="+ArtworkPending()+"\nartwork_views_created="+artworkViewsCreated+"\npage_artwork_cold="+pageArtworkCold+"\nprocess_id="+Process.GetCurrentProcess().Id+"\nediting="+editing+"\nvolume="+currentVolume+"\nmute="+currentMute+"\nbrightness="+SettingValue("brightness")+"\ngame-mode="+SettingValue("game-mode")+"\nsleeptimer="+SettingValue("sleeptimer")+"\n");}catch{}}
  public static void Main(string[] args){using(var app=new QuietHome())app.Run(args);}
 }

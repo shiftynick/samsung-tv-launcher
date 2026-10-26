@@ -29,5 +29,11 @@
   "animationMs": 160,
   "fontFamily": "Quiet Inter",
   "fontVariants": true,
-  "license": "LICENSE.txt"
+  "license": "LICENSE.txt",
+  "motion": {
+    "effect": "fireflies",
+    "count": 10,
+    "seconds": 18,
+    "iconFloat": true
+  }
 }

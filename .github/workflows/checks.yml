@@ -33,5 +33,5 @@ jobs:
         run: |
           dotnet run --project tools/ThemeTool -- list launcher/assets/app-icons/themes
           theme_test_root=$(mktemp -d)
-          dotnet run --project tools/ThemeTool -- create example "Example" "$theme_test_root/example" launcher/assets/app-icons/themes/neutral
+          dotnet run --project tools/ThemeTool -- create example "Example" "$theme_test_root/example"
           dotnet run --project tools/ThemeTool -- validate "$theme_test_root/example"

@@ -14,4 +14,6 @@ Personal device profiles, raw command output, TV screenshots, captured traffic, 
 
 Preserve upstream notices and separate font/icon licenses. Theme artwork is generated; keep app names and navigation as native UI, not text baked into wallpapers. Keep the theme cache bounded to the active theme and preserve its preference in the launcher's own data directory. Test preference persistence, malformed values, catalog navigation and relevant rollback logic. Build NUI changes against matching privately obtained references and report hardware-test limits accurately.
 
-Theme manifests use the shared ThemePack parser on host and TV. Validate bundled and contributed packs with tools/ThemeTool; test dynamic discovery, pagination, invalid packs and Neutral recovery. Keep new themes data-only and do not add theme-ID branches to Home.cs.
+Theme manifests use the shared ThemePack parser on host and TV. Validate bundled and contributed packs with tools/ThemeTool; test dynamic discovery, pagination, invalid packs, first-valid/Cinematic fallback and empty-catalog recovery. Keep new themes data-only and do not add theme-ID branches to Home.cs.
+
+Motion effects must be bounded native animations, foreground/Home-only, paused before launching other apps, and disposed before destroying their views. Test saved Off/Subtle/Full behavior; preserve remote navigation and app/HDMI playback.

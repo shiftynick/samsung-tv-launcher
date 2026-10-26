@@ -1,14 +1,17 @@
 # Samsung TV Launcher
 
-A native Samsung Tizen home screen with switchable themes, six streaming-app shortcuts, HDMI switching, and a way back to Samsung Home. A Neutral starter and four dinosaur theme packs are bundled. Built for an owner-controlled **S90D on Tizen 9**, using .NET/NUI and Samsung's existing picture, audio, app, and HDMI stack.
+A native Samsung Tizen home screen with switchable themes, six streaming-app shortcuts, HDMI switching, and a way back to Samsung Home. Four dinosaur theme packs and the cyberpunk Neon District are bundled. Built for an owner-controlled **S90D on Tizen 9**, using .NET/NUI and Samsung's existing picture, audio, app, and HDMI stack.
 
 ![Artwork previews for Cinematic, 8-bit Jungle, Fossil Club and Dino Den](docs/images/themes-overview.png)
 
 *Generated theme-art previews, not photographs of a TV. The running launcher uses independent native controls and live focus states.*
 
+[Neon District artwork and generation notes](docs/cyberpunk-theme.md) cover the additional cyberpunk pack.
+
 ## Features
 
-- **Neutral**, **Cinematic**, **8-bit Jungle**, **Fossil Club**, and **Dino Den**. The four dinosaur packs include title-free wallpapers and six custom app illustrations; Neutral uses native monograms. New data-only packs are discovered at runtime.
+- **Cinematic**, **8-bit Jungle**, **Fossil Club**, **Dino Den**, and **Neon District**, with title-free wallpapers and six custom app illustrations. New data-only packs are discovered at runtime.
+- Optional native ambient particles and selected-icon motion, with a saved **Off / Subtle / Full** control on Home. Effects pause when the launcher leaves the foreground.
 - A remote-friendly theme picker. The selected theme is saved in the launcher's own app data and survives a launcher restart.
 - Shortcuts for **Plex, Netflix, Apple TV, Prime Video, YouTube, and YouTube TV**. These launch installed Tizen apps; they do not replace the apps or provide subscriptions.
 - HDMI switching, an input-picker shortcut, quick settings, and access to Samsung's full settings.
@@ -23,7 +26,8 @@ A native Samsung Tizen home screen with switchable themes, six streaming-app sho
 | Firmware | `T-PTMDAKUC-0090-2130.0` |
 | Runtime | Tizen 9.0, Linux 5.4.249 ARMv7, .NET 6.0.9 |
 | Access | Temporary authenticated UID/EUID 0; staging cleanup and unchanged password/SDB-key hashes checked |
-| Launcher | Owner reviewed the themed UI; all four themes switched on the TV, with 12/12 cached app image views ready per theme |
+| Launcher | Owner reviewed the original themes; four dinosaur packs and Neon District switched on the TV with 12/12 cached image views ready per pack |
+| Motion | Off/Subtle/Full state checks, picker cleanup, pause/return through Samsung Home and preference persistence checked; visual review and GPU performance remain separate |
 | Theme persistence | Saved selection survived a launcher process restart |
 | Playback | Owner confirmed Plex with sound, and reported Netflix, Apple TV, Prime Video, and YouTube working |
 | HDMI | Owner confirmed switching to the connected HDMI device |
@@ -61,6 +65,8 @@ python3 tools/build.py launcher --framework .local/tv-framework
 ```
 
 That creates local deployable files under `.local/package/`. **Building does not install or change Home.** Follow the phased setup guide, retain original backups on the computer and TV, test the launcher first, and only then change Home/startup routing.
+
+See [custom app/game ideas and privacy/performance experiments](docs/apps-and-experiments.md).
 
 ## Customize
 

@@ -30,6 +30,6 @@ A private read-only S90D service/process/settings inventory has been collected. 
 
 ## Theme packs
 
-Implemented: runtime discovery of data-only theme folders, a paginated picker, palette/art/font/style manifests, bounded validation, Neutral recovery and host-side create/clone/validate tools. The four original dinosaur designs remain bundled alongside Neutral. See [theme-pack authoring](theme-packs.md).
+Implemented: runtime discovery of data-only theme folders, a paginated picker, palette/art/font/style manifests, bounded validation, empty-catalog recovery and host-side create/clone/validate tools. The four original dinosaur designs remain bundled, with Neon District added as a cyberpunk pack. A plain theme is no longer offered in normal selection; the authoring tool can still generate a minimal starter. See [theme-pack authoring](theme-packs.md).
 
 Authorized host-side installation and reload is the initial workflow. USB import, online downloads, a marketplace and arbitrary code-defined layouts are separate possible features. Theme data remains separate from app IDs, HDMI configuration and device access profiles.

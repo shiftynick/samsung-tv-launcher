@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "cyberpunk",
+  "name": "Neon District",
+  "order": 50,
+  "background": "background.png",
+  "icons": {
+    "plex": "plex.png",
+    "netflix": "netflix.png",
+    "apple-tv": "apple-tv.png",
+    "prime-video": "prime-video.png",
+    "youtube": "youtube.png",
+    "youtube-tv": "youtube-tv.png"
+  },
+  "palette": {
+    "background": "#060D20",
+    "text": "#F3FAFF",
+    "muted": "#BAC9DE",
+    "accent": "#39E8FF",
+    "card": "#0A1027",
+    "control": "#080F25DB",
+    "caption": "#060B1FE8",
+    "overlay": "#050A1FEE",
+    "header": "#02061666",
+    "footer": "#020616B8"
+  },
+  "cornerRadius": 18,
+  "pixelArt": false,
+  "animationMs": 160,
+  "fontFamily": "Quiet Inter",
+  "fontVariants": true,
+  "license": "LICENSE.txt",
+  "motion": {
+    "effect": "rain",
+    "count": 12,
+    "seconds": 12,
+    "iconFloat": true
+  }
+}

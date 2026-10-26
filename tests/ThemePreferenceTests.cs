@@ -17,13 +17,13 @@ public static class ThemePreferenceTests
    Pack(packs,"custom",Basic("my-new-style","My new style"));
    var catalog=ThemeCatalog.Discover(packs);
    Check(catalog.Find("my-new-style")!=null,"New themes must be discovered without editing a C# list");
-   Check(catalog.Find("neutral")!=null,"Neutral recovery theme must always exist");
-   Check(ThemePreference.Load(data,catalog)=="neutral","Missing preference must recover to Neutral");
+   Check(catalog.Find("neutral")==null,"Recovery must not be offered beside valid packs");
+   Check(ThemePreference.Load(data,catalog)=="my-new-style","Missing preference must choose a valid pack");
    foreach(var pack in catalog.Items){ThemePreference.Save(data,pack.Id,catalog);Check(ThemePreference.Load(data,catalog)==pack.Id,"Preference must survive reload");Check(!File.Exists(data+".new"),"Atomic save left staging file");}
    ThemePreference.Save(data,"my-new-style",catalog);
    Reject(()=>ThemePreference.Save(data,"../escape",catalog),"Unknown theme must not be saved");
    Check(ThemePreference.Load(data,catalog)=="my-new-style","Rejected save overwrote valid selection");
-   File.WriteAllText(data,"corrupt");Check(ThemePreference.Load(data,catalog)=="neutral","Corrupt preference must recover");
+   File.WriteAllText(data,"corrupt");Check(ThemePreference.Load(data,catalog)=="my-new-style","Corrupt preference must recover to a valid pack");
    File.WriteAllText(data,"my-new-style\n");Check(ThemePreference.Load(data,catalog)=="my-new-style","Saved choice permits trailing newline");
    File.Delete(Path.Combine(packs,"custom","theme.json"));catalog=ThemeCatalog.Discover(packs);
    Check(ThemePreference.Load(data,catalog)=="neutral","Removed saved pack must recover without crashing");
@@ -48,12 +48,23 @@ public static class ThemePreferenceTests
    File.WriteAllText(Path.Combine(bad,"font-license.txt"),new string('x',65537));
    File.WriteAllText(manifest,"{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"fontLicense\":\"font-license.txt\"}");
    Reject(()=>ThemePack.Load(manifest),"Oversized standalone font license accepted");
+   foreach(string invalidMotion in new[]{"null","{\"effect\":\"script\"}","{\"count\":100}","{\"seconds\":1}","{\"unexpected\":true}"}){
+    File.WriteAllText(manifest,"{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"motion\":"+invalidMotion+"}");Reject(()=>ThemePack.Load(manifest),"Unbounded/unknown motion accepted");
+   }
+   string motionFile=Path.Combine(root,"motion.txt");
+   Check(MotionPreference.Load(motionFile)=="subtle","Motion default must be subtle");
+   foreach(string mode in new[]{"off","subtle","full"}){MotionPreference.Save(motionFile,mode);Check(MotionPreference.Load(motionFile)==mode,"Motion choice did not persist");Check(!File.Exists(motionFile+".new"),"Motion staging leaked");Check(!MotionPreference.Active(mode,false,0),"Motion must pause behind another app");Check(!MotionPreference.Active(mode,true,3),"Motion must be off in the theme picker");}
+   Reject(()=>MotionPreference.Save(motionFile,"invalid"),"Unknown motion saved");Check(MotionPreference.Load(motionFile)=="full","Rejected motion save overwrote preference");
+   Check(MotionPreference.Next(MotionPreference.Next(MotionPreference.Next("off")))=="off","Motion cycle must include all choices");
+   Check(MotionPreference.ParticleCount("off",18)==0&&MotionPreference.ParticleCount("subtle",18)==6&&MotionPreference.ParticleCount("full",100)==18,"Motion budget incorrect");
+   Pack(packs,"cinema",Basic("cinema","Cinematic"));Pack(packs,"custom",Basic("my-new-style","My Style"));catalog=ThemeCatalog.Discover(packs);
+   Check(catalog.FallbackId=="cinema","Cinematic must be the bundled fallback");
    string duplicate=Path.Combine(root,"duplicates");Pack(duplicate,"one",Basic("same","One"));Pack(duplicate,"two",Basic("same","Two"));Pack(duplicate,"broken","{broken");
-   var duplicates=ThemeCatalog.Discover(duplicate);Check(duplicates.Items.Count(p=>p.Id=="same")==1,"Duplicate theme IDs must be rejected");Check(duplicates.Errors.Count==2,"Bad packs must be reported and isolated");Check(duplicates.Find("neutral")!=null,"Bad packs must not remove recovery theme");
+   var duplicates=ThemeCatalog.Discover(duplicate);Check(duplicates.Items.Count(p=>p.Id=="same")==1,"Duplicate theme IDs must be rejected");Check(duplicates.Errors.Count==2,"Bad packs must be reported and isolated");Check(duplicates.Find("neutral")==null,"Bad packs must not add a selectable plain theme beside a valid pack");
    for(int count=1;count<=65;count++)for(int item=0;item<count;item++)foreach(string key in new[]{"Left","Right","Up","Down"}){int next=ThemeNavigation.Move(count,item,key);Check(next>=-1&&next<count,"Picker navigation out of range");}
    Check(ThemeNavigation.Move(5,3,"Down")==4,"Partial last picker page must clamp column");Check(ThemeNavigation.Move(5,4,"Up")==2,"Picker must return to previous page");
-   if(args.Length==1){var bundled=ThemeCatalog.Discover(args[0]);Check(bundled.Errors.Count==0,string.Join(";",bundled.Errors));Check(bundled.Items.Count>=5,"Bundled manifest packs were not found");}
-   Console.WriteLine("Theme packs, validation, recovery, preference persistence and picker pagination: "+checks+" checks passed.");
+   if(args.Length==1){var bundled=ThemeCatalog.Discover(args[0]);Check(bundled.Errors.Count==0,string.Join(";",bundled.Errors));Check(bundled.Items.Count>=4,"Bundled manifest packs were not found");Check(bundled.Find("neutral")==null,"Plain theme must not ship");}
+   Console.WriteLine("Theme packs, motion bounds/lifecycle policy, preferences and picker pagination: "+checks+" checks passed.");
   }finally{Directory.Delete(root,true);}
  }
 }
