@@ -1,6 +1,6 @@
 # Project provenance
 
-Samsung TV Dino Launcher is a source snapshot derived from [Quiet Tizen](https://github.com/jss8649/quiet-tizen/tree/cf518d7a9278dca7990e27756218258e44044a29), commit `cf518d7a9278dca7990e27756218258e44044a29`. That project's MIT license and third-party notices are retained. Its original U8000F research is preserved in [upstream provenance](upstream-provenance.md) and the existing upstream observation/profile files; those results are not S90D results.
+Samsung TV Launcher is a source snapshot derived from [Quiet Tizen](https://github.com/jss8649/quiet-tizen/tree/cf518d7a9278dca7990e27756218258e44044a29), commit `cf518d7a9278dca7990e27756218258e44044a29`. That project's MIT license and third-party notices are retained. Its original U8000F research is preserved in [upstream provenance](upstream-provenance.md) and the existing upstream observation/profile files; those results are not S90D results.
 
 This project's additions include four dinosaur theme sets, a native theme picker with bounded active-theme image caching, atomic preference persistence, six app shortcuts, a stock Samsung Home escape route, S90D-specific access gating, a native Home/startup helper with drift/readback guards, privacy-focused publication checks, and S90D verification/recovery documentation. The redundant top-right Apps/Inputs/Settings buttons were removed; equivalent functions remain in primary navigation.
 

@@ -1,4 +1,4 @@
-# Working on Samsung TV Dino Launcher
+# Working on Samsung TV Launcher
 
 This is a model-specific native Tizen launcher derived from Quiet Tizen. Read README.md, docs/10-s90d-setup.md, docs/11-home-routing.md, docs/09-recovery.md and docs/verification.md before any TV work.
 

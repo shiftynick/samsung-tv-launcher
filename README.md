@@ -1,6 +1,6 @@
-# Samsung TV Dino Launcher
+# Samsung TV Launcher
 
-A native Samsung Tizen home screen with four dinosaur themes, six streaming-app shortcuts, HDMI switching, and a way back to Samsung Home. Built for an owner-controlled **S90D on Tizen 9**, using .NET/NUI and Samsung's existing picture, audio, app, and HDMI stack.
+A native Samsung Tizen home screen with switchable themes, six streaming-app shortcuts, HDMI switching, and a way back to Samsung Home. Four dinosaur theme packs are currently bundled. Built for an owner-controlled **S90D on Tizen 9**, using .NET/NUI and Samsung's existing picture, audio, app, and HDMI stack.
 
 ![Artwork previews for Cinematic, 8-bit Jungle, Fossil Club and Dino Den](docs/images/themes-overview.png)
 
@@ -63,6 +63,8 @@ python3 tools/build.py launcher --framework .local/tv-framework
 That creates local deployable files under `.local/package/`. **Building does not install or change Home.** Follow the phased setup guide, retain original backups on the computer and TV, test the launcher first, and only then change Home/startup routing.
 
 ## Customize
+
+The four current themes are selected in code. Replacing their art is straightforward; adding a new theme or palette still requires C# changes and a rebuild. A general data-only theme-pack format is [planned](docs/roadmap.md#theme-packs); it is not implemented yet.
 
 - App catalog: `launcher/assets/apps.json`; put private app-ID or catalog changes in ignored `apps.local.json`.
 - Theme art: `launcher/assets/app-icons/themes/`; PNG backgrounds and independent per-app tiles. Generated art and licensed fonts are included; downloaded publisher icons are not.

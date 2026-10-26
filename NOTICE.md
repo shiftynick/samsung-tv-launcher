@@ -1,4 +1,4 @@
-# Samsung TV Dino Launcher attribution
+# Samsung TV Launcher attribution
 
 This project derives from [Quiet Tizen](https://github.com/jss8649/quiet-tizen/tree/cf518d7a9278dca7990e27756218258e44044a29), MIT. Its original copyright and third-party notices below are preserved. New dinosaur theme backgrounds and tile illustrations were generated with OpenAI ImageGen and are distributed with this project to the extent contributors hold applicable rights; no exclusive rights to app brands or trademarks are claimed. The Press Start 2P font retains its SIL Open Font License in `licenses/PressStart2P-OFL.txt`. No downloaded publisher artwork, original Plex icon or Samsung binary is included.
 

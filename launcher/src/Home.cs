@@ -73,7 +73,7 @@ public sealed class QuietHome : NUIApplication
   theme=ThemePreference.Load(themePath);ApplyPalette();
   try{FontClient.Instance.AddCustomFontDirectory(Root+"app-icons/themes/fonts");}catch{}
   Window.Default.BackgroundColor=new Color(.02f,.03f,.03f,1);
-  Window.Default.Title="Samsung TV Dino Launcher";Window.Default.KeyEvent+=OnKey;
+  Window.Default.Title="Samsung TV Launcher";Window.Default.KeyEvent+=OnKey;
   PreloadArtwork();
   RefreshSource();selected=SourceIndex();BuildPage();
   clockTimer=new Tizen.NUI.Timer(30000);
