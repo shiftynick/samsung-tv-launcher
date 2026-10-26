@@ -20,12 +20,35 @@ public sealed class ThemePalette
  public string Footer {get;set;}="#000000B3";
 }
 
+public sealed class ThemeSceneLayer
+{
+ public string Asset {get;set;}
+ public string Color {get;set;}="#FFFFFF";
+ public int X {get;set;}
+ public int Y {get;set;}
+ public int Width {get;set;}=100;
+ public int Height {get;set;}=100;
+ public int ToX {get;set;}
+ public int ToY {get;set;}
+ public int Seconds {get;set;}=12;
+ public float Opacity {get;set;}=1;
+ public float Phase {get;set;}
+ public string Kind {get;set;}="drift";
+}
+public sealed class ThemeTileMotion
+{
+ public string Image {get;set;}
+ public int Seconds {get;set;}=6;
+}
+
 public sealed class ThemeMotion
 {
  public string Effect {get;set;}="none";
  public int Count {get;set;}=10;
  public int Seconds {get;set;}=16;
  public bool IconFloat {get;set;}=true;
+ public List<ThemeSceneLayer> Layers {get;set;}=new List<ThemeSceneLayer>();
+ public Dictionary<string,ThemeTileMotion> Tiles {get;set;}=new Dictionary<string,ThemeTileMotion>();
 }
 
 // Data-only theme format shared by the TV and host authoring/validation tool.
@@ -55,9 +78,13 @@ public sealed class ThemePack
  [JsonIgnore] public string FontPath=>Asset(FontFile);
  public static readonly JsonSerializerOptions JsonOptions=new JsonSerializerOptions{PropertyNamingPolicy=JsonNamingPolicy.CamelCase,WriteIndented=true};
  static readonly HashSet<string> Fields=new HashSet<string>{"schemaVersion","id","name","order","background","preview","icons","palette","cornerRadius","pixelArt","animationMs","motion","fontFamily","fontVariants","fontFile","fontLicense","license"};
- static readonly HashSet<string> MotionFields=new HashSet<string>{"effect","count","seconds","iconFloat"};
+ static readonly HashSet<string> MotionFields=new HashSet<string>{"effect","count","seconds","iconFloat","layers","tiles"};
+ static readonly HashSet<string> SceneFields=new HashSet<string>{"asset","color","x","y","width","height","toX","toY","seconds","opacity","phase","kind"};
+ static readonly HashSet<string> TileFields=new HashSet<string>{"image","seconds"};
  static readonly HashSet<string> PaletteFields=new HashSet<string>{"background","text","muted","accent","card","control","caption","overlay","header","footer"};
  public static bool ValidId(string id)=>id!=null&&Regex.IsMatch(id,@"\A[a-z0-9][a-z0-9-]{0,47}\z");
+ public string ScenePath(ThemeSceneLayer layer)=>Asset(layer.Asset);
+ public string TileFramePath(string key)=>key!=null&&Motion.Tiles.TryGetValue(key,out var frame)?Asset(frame.Image):null;
  public string IconPath(string key)=>key!=null&&Icons.TryGetValue(key,out var file)?Asset(file):null;
  public static float[] Color(string value)
  {
@@ -116,7 +143,17 @@ public sealed class ThemePack
    ObjectFields(document.RootElement,Fields,"theme");
    foreach(string required in new[]{"schemaVersion","id","name"})if(!document.RootElement.TryGetProperty(required,out _))throw new InvalidDataException("Missing theme field: "+required);
    if(document.RootElement.TryGetProperty("palette",out var palette))ObjectFields(palette,PaletteFields,"palette");
-   if(document.RootElement.TryGetProperty("motion",out var motion))ObjectFields(motion,MotionFields,"motion");
+   if(document.RootElement.TryGetProperty("motion",out var motion)){
+    ObjectFields(motion,MotionFields,"motion");
+    if(motion.TryGetProperty("layers",out var layers)){
+     if(layers.ValueKind!=JsonValueKind.Array)throw new InvalidDataException("Scene layers must be an array.");
+     foreach(var layer in layers.EnumerateArray())ObjectFields(layer,SceneFields,"scene layer");
+    }
+    if(motion.TryGetProperty("tiles",out var tiles)){
+     ObjectFields(tiles,null,"tile animations");
+     foreach(var tile in tiles.EnumerateObject())ObjectFields(tile.Value,TileFields,"tile animation");
+    }
+   }
    if(document.RootElement.TryGetProperty("icons",out var icons))ObjectFields(icons,null,"icons");
   }
   var pack=JsonSerializer.Deserialize<ThemePack>(text,JsonOptions);
@@ -130,6 +167,18 @@ public sealed class ThemePack
   var uniqueFiles=new HashSet<string>();
   var images=new List<string>();if(pack.Background!=null)images.Add(pack.Background);if(pack.Preview!=null)images.Add(pack.Preview);
   foreach(var entry in pack.Icons){if(!ValidId(entry.Key)||entry.Value==null)throw new InvalidDataException("Invalid icon key or asset.");images.Add(entry.Value);}
+  if(pack.Motion.Layers==null||pack.Motion.Tiles==null||pack.Motion.Layers.Count>8||pack.Motion.Tiles.Count>6)throw new InvalidDataException("Scene/tile animation budget exceeded.");
+  long sceneArea=0;
+  foreach(var layer in pack.Motion.Layers){
+   if(layer==null||layer.Width<1||layer.Width>1920||layer.Height<1||layer.Height>1080||Math.Abs((long)layer.X)>3840||Math.Abs((long)layer.Y)>2160||Math.Abs((long)layer.ToX)>3840||Math.Abs((long)layer.ToY)>2160||layer.Seconds<3||layer.Seconds>90||!float.IsFinite(layer.Opacity)||layer.Opacity<0||layer.Opacity>1||!float.IsFinite(layer.Phase)||layer.Phase<0||layer.Phase>=1||!new[]{"drift","travel","pulse"}.Contains(layer.Kind))throw new InvalidDataException("Invalid scene layer.");
+   Color(layer.Color);sceneArea+=(long)layer.Width*layer.Height;
+   if(layer.Asset!=null)images.Add(layer.Asset);
+  }
+  if(sceneArea>4147200)throw new InvalidDataException("Scene composition exceeds two screen areas.");
+  foreach(var tile in pack.Motion.Tiles){
+   if(!ValidId(tile.Key)||!pack.Icons.ContainsKey(tile.Key)||tile.Value==null||tile.Value.Image==null||tile.Value.Seconds<3||tile.Value.Seconds>20)throw new InvalidDataException("Invalid tile animation.");
+   images.Add(tile.Value.Image);
+  }
   foreach(string relative in images){string file=pack.Asset(relative);pixelBudget+=PngPixels(file);if(uniqueFiles.Add(file))encodedBudget+=new FileInfo(file).Length;}
   if(pixelBudget>16777216||encodedBudget>64*1024*1024)throw new InvalidDataException("Theme images exceed the decoded/encoded pack budget.");
   if(pack.FontFile!=null){

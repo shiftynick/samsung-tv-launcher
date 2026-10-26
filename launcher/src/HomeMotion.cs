@@ -21,9 +21,10 @@ public sealed partial class QuietHome
  }
  void StopIconMotion(){
   if(iconAnimation!=null){iconAnimation.Stop();iconAnimation.Dispose();iconAnimation=null;}
+  ClearAlternateTile();
   if(floatingIcon!=null){floatingIcon.Position=iconRest;floatingIcon=null;}
  }
- void ClearMotion(){StopIconMotion();foreach(var animation in ambientAnimations){animation.Stop();animation.Dispose();}ambientAnimations.Clear();particleCount=0;}
+ void ClearMotion(){StopIconMotion();foreach(var animation in ambientAnimations){animation.Stop();animation.Dispose();}ambientAnimations.Clear();particleCount=0;sceneLayerCount=0;sceneImages.Clear();}
  void PauseMotion(){
   motionPaused=true;
   foreach(var animation in ambientAnimations)animation.Pause();
@@ -31,7 +32,7 @@ public sealed partial class QuietHome
   if(focusAnimation!=null){focusAnimation.Stop();focusAnimation.Dispose();focusAnimation=null;}
  }
  void ResumeMotion(){motionPaused=false;if(MotionActive)foreach(var animation in ambientAnimations)animation.Play();UpdateIconMotion();}
- void BuildAmbientMotion(){try{BuildAmbientMotionCore();}catch(Exception error){ClearMotion();motionError=error.GetType().Name;}}
+ void BuildAmbientMotion(){try{BuildSceneMotion();BuildAmbientMotionCore();}catch(Exception error){ClearMotion();motionError=error.GetType().Name;}}
  void BuildAmbientMotionCore(){
   if(page!=0||motion=="off"||currentTheme.Motion.Effect=="none")return;
   var profile=currentTheme.Motion;
@@ -58,16 +59,19 @@ public sealed partial class QuietHome
  void UpdateIconMotion(){try{UpdateIconMotionCore();}catch(Exception error){StopIconMotion();motionError=error.GetType().Name;}}
  void UpdateIconMotionCore(){
   StopIconMotion();
-  if(!MotionActive||!currentTheme.Motion.IconFloat||area!=1||selected<0||selected>=slots.Count||!slots[selected].Action.StartsWith("app:"))return;
+  if(!MotionActive||area!=1||selected<0||selected>=slots.Count||!slots[selected].Action.StartsWith("app:"))return;
   foreach(var cached in artworkCache.Values)if(cached.Parent==slots[selected].Card){floatingIcon=cached.Image;break;}
   if(floatingIcon==null)return;
   iconRest=new Position(floatingIcon.Position.X,floatingIcon.Position.Y,floatingIcon.Position.Z);
-  float amount=motion=="full"?4:2;
+  string iconKey=library[selected].ThemeIcon;
+  if(!currentTheme.Motion.IconFloat&&currentTheme.TileFramePath(iconKey)==null){floatingIcon=null;return;}
+  float amount=currentTheme.Motion.IconFloat?(motion=="full"?4:2):0;
   iconAnimation=new Animation(5000){Looping=true};
   using(var frames=new KeyFrames()){
    frames.Add(0f,iconRest);frames.Add(.5f,new Position(iconRest.X,iconRest.Y-amount,iconRest.Z));frames.Add(1f,iconRest);
    iconAnimation.AnimateBetween(floatingIcon,"Position",frames);
   }
+  AddTileAnimation(iconKey);
   iconAnimation.Play();
  }
 }

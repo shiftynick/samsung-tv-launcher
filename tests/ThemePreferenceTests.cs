@@ -51,6 +51,16 @@ public static class ThemePreferenceTests
    foreach(string invalidMotion in new[]{"null","{\"effect\":\"script\"}","{\"count\":100}","{\"seconds\":1}","{\"unexpected\":true}"}){
     File.WriteAllText(manifest,"{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"motion\":"+invalidMotion+"}");Reject(()=>ThemePack.Load(manifest),"Unbounded/unknown motion accepted");
    }
+   File.WriteAllBytes(Path.Combine(bad,"scene.png"),png);
+   foreach(string invalidScene in new[]{"{\"layers\":null}","{\"layers\":[{\"width\":9000}]}","{\"layers\":[{\"kind\":\"execute\"}]}","{\"layers\":[{\"phase\":1}]}","{\"layers\":[{\"asset\":\"../outside.png\"}]}","{\"layers\":[{\"wrong\":true}]}","{\"tiles\":{\"missing-icon\":{\"image\":\"scene.png\"}}}"}){
+    File.WriteAllText(manifest,"{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"motion\":"+invalidScene+"}");Reject(()=>ThemePack.Load(manifest),"Invalid/unbounded scene accepted");
+   }
+   File.WriteAllText(manifest,"{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"icons\":{\"netflix\":\"scene.png\"},\"motion\":{\"layers\":[{\"asset\":\"scene.png\",\"kind\":\"travel\",\"width\":100,\"height\":50,\"toX\":1000}],\"tiles\":{\"netflix\":{\"image\":\"scene.png\",\"seconds\":6}}}}");
+   var scenePack=ThemePack.Load(manifest);Check(scenePack.ScenePath(scenePack.Motion.Layers[0])!=null&&scenePack.TileFramePath("netflix")!=null,"Valid scene/frame assets not resolved");
+   File.Delete(Path.Combine(bad,"scene.png"));Check(scenePack.ScenePath(scenePack.Motion.Layers[0])==null&&scenePack.TileFramePath("netflix")==null,"Deleted scene/frame assets must be safe");
+   foreach(var layers in new[]{Enumerable.Range(0,9).Select(i=>new{width=1,height=1}).ToArray(),Enumerable.Range(0,3).Select(i=>new{width=1920,height=1080}).ToArray()}){
+    File.WriteAllText(manifest,JsonSerializer.Serialize(new{schemaVersion=1,id="bad",name="Bad",motion=new{layers}}));Reject(()=>ThemePack.Load(manifest),"Layer count/fill budget exceeded");
+   }
    string motionFile=Path.Combine(root,"motion.txt");
    Check(MotionPreference.Load(motionFile)=="subtle","Motion default must be subtle");
    foreach(string mode in new[]{"off","subtle","full"}){MotionPreference.Save(motionFile,mode);Check(MotionPreference.Load(motionFile)==mode,"Motion choice did not persist");Check(!File.Exists(motionFile+".new"),"Motion staging leaked");Check(!MotionPreference.Active(mode,false,0),"Motion must pause behind another app");Check(!MotionPreference.Active(mode,true,3),"Motion must be off in the theme picker");}

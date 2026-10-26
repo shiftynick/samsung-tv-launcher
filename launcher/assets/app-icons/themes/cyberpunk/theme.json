@@ -3,7 +3,7 @@
   "id": "cyberpunk",
   "name": "Neon District",
   "order": 50,
-  "background": "background.png",
+  "background": "scene/city-plate.png",
   "icons": {
     "plex": "plex.png",
     "netflix": "netflix.png",
@@ -31,9 +31,83 @@
   "fontVariants": true,
   "license": "LICENSE.txt",
   "motion": {
-    "effect": "rain",
-    "count": 12,
+    "effect": "none",
+    "count": 0,
     "seconds": 12,
-    "iconFloat": true
-  }
+    "iconFloat": false,
+    "layers": [
+      {
+        "asset": "scene/hovercar.png",
+        "kind": "travel",
+        "x": -240,
+        "y": 155,
+        "width": 210,
+        "height": 118,
+        "toX": 1920,
+        "toY": 210,
+        "seconds": 24,
+        "opacity": 1,
+        "phase": 0.18
+      },
+      {
+        "asset": "scene/hovercar.png",
+        "kind": "travel",
+        "x": -150,
+        "y": 285,
+        "width": 140,
+        "height": 79,
+        "toX": 1920,
+        "toY": 245,
+        "seconds": 32,
+        "opacity": 0.85,
+        "phase": 0.55
+      },
+      {
+        "asset": "scene/hovercar.png",
+        "kind": "travel",
+        "x": -100,
+        "y": 85,
+        "width": 95,
+        "height": 54,
+        "toX": 1920,
+        "toY": 125,
+        "seconds": 40,
+        "opacity": 0.7,
+        "phase": 0.78
+      },
+      {
+        "asset": "scene/mist.png",
+        "kind": "drift",
+        "x": 0,
+        "y": 305,
+        "width": 1280,
+        "height": 270,
+        "toX": 380,
+        "toY": 285,
+        "seconds": 28,
+        "opacity": 0.25,
+        "phase": 0.2
+      },
+      {
+        "asset": "scene/mist.png",
+        "kind": "drift",
+        "x": 700,
+        "y": 330,
+        "width": 1100,
+        "height": 220,
+        "toX": 440,
+        "toY": 355,
+        "seconds": 36,
+        "opacity": 0.16,
+        "phase": 0.65
+      }
+    ],
+    "tiles": {
+      "netflix": {
+        "image": "scene/cat-blink.png",
+        "seconds": 6
+      }
+    }
+  },
+  "preview": "background.png"
 }

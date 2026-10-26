@@ -11,7 +11,7 @@ A native Samsung Tizen home screen with switchable themes, six streaming-app sho
 ## Features
 
 - **Cinematic**, **8-bit Jungle**, **Fossil Club**, **Dino Den**, and **Neon District**, with title-free wallpapers and six custom app illustrations. New data-only packs are discovered at runtime.
-- Optional native ambient particles and selected-icon motion, with a saved **Off / Subtle / Full** control on Home. Effects pause when the launcher leaves the foreground.
+- Neon District has moving hovercars, drifting mist and a selected robot-cat blink; other packs retain native particles and selected-icon motion, with a saved **Off / Subtle / Full** control on Home. Effects pause when the launcher leaves the foreground.
 - A remote-friendly theme picker. The selected theme is saved in the launcher's own app data and survives a launcher restart.
 - Shortcuts for **Plex, Netflix, Apple TV, Prime Video, YouTube, and YouTube TV**. These launch installed Tizen apps; they do not replace the apps or provide subscriptions.
 - HDMI switching, an input-picker shortcut, quick settings, and access to Samsung's full settings.

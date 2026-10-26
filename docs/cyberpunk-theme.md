@@ -33,6 +33,6 @@ DOTNET_ROLL_FORWARD=Major dotnet run --project tools/ThemeTool -- validate launc
 
 Validation returned `Valid: cyberpunk — Neon District`. All seven production PNGs were visually inspected after export. The public audit's `inspect_blob` check passed for all 11 new files using their working-tree bytes; no staging was performed. Each PNG contains only `IHDR`, `IDAT` and `IEND` chunks. The seven images total 3,646,464 decoded pixels and 5,502,851 encoded bytes, within the shared parser's pack budgets. The installed SDK emitted its existing net6.0 support warning; validation exited successfully.
 
-Parent integration adds the optional native `rain` motion profile (12 particles, 12-second base loop, selected-icon float). The wallpaper and icons remain static PNGs. The launcher update checked all artwork ready and no reported motion error on the recorded S90D; visible review remains separate.
+The first integration added native rain particles; the [living-scene update](living-scenes.md) replaces those with moving hovercars, drifting mist and a robot-cat blink. The wallpaper and icons remain static PNGs. The launcher update checked all artwork ready and no reported motion error on the recorded S90D; visible review remains separate.
 
 The theme includes `LICENSE.txt` following the bundled generated packs and an artwork-specific `NOTICE.md`. Generated outputs may not be unique; app names and trademarks remain their owners' property. The design task itself did not access the TV; integration evidence is recorded separately in [verification](verification.md).

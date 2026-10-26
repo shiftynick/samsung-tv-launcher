@@ -83,6 +83,8 @@ Effects: `none`, `fireflies`, `dust`, `rain`, or `stars`. They use small native 
 
 Home's Motion control cycles Off / Subtle / Full, stored independently of theme selection. Off also disables animated focus transitions. Ambient/icon loops run only on Home while foregrounded, pause behind apps/HDMI, and are disposed on page/theme changes. No per-frame managed timer or network asset loading is used. `animationMs` controls focus transitions separately; set Motion Off to disable all animation. Existing packs without a motion block get no ambient particles.
 
+For moving scene artwork and character frames, see [living scenes](living-scenes.md).
+
 ## Bounds and rejection
 
 - Unique lowercase IDs of up to 48 characters, schema version 1, display names up to 40 characters, and at most 64 discovered packs. An embedded recovery screen is used only when none are valid.
