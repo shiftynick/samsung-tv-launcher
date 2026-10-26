@@ -15,6 +15,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "6.0.x"
+      - name: Install photo export test dependency
+        run: python3 -m pip install Pillow
       - name: Python tests and recipe syntax
         run: python3 -m unittest discover -s tests -v
       - name: Build open-source access payloads
@@ -22,6 +24,8 @@ jobs:
       - name: Test native catalog logic without Samsung references
         run: dotnet run --project tests/CatalogTests.csproj -- launcher/assets/apps.json
 
+      - name: Test private photo catalog validation
+        run: dotnet run --project tests/PhotoCatalogTests.csproj
       - name: Test theme preference persistence
         run: dotnet run --project tests/ThemePreferenceTests.csproj -- launcher/assets/app-icons/themes
       - name: Compile native routing helper without Samsung references

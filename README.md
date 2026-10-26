@@ -14,6 +14,7 @@ A native Samsung Tizen home screen with switchable themes, six streaming-app sho
 - Neon District has moving hovercars, drifting mist and a selected robot-cat blink; other packs retain native particles and selected-icon motion, with a saved **Off / Subtle / Full** control on Home. Effects pause when the launcher leaves the foreground.
 - A remote-friendly theme picker. The selected theme is saved in the launcher's own app data and survives a launcher restart.
 - Shortcuts for **Plex, Netflix, Apple TV, Prime Video, YouTube, and YouTube TV**. These launch installed Tizen apps; they do not replace the apps or provide subscriptions.
+- A [local photo screen](docs/local-photos.md) with album browsing, slideshow controls and metadata-free private exports; no always-on computer is required after installation.
 - HDMI switching, an input-picker shortcut, quick settings, and access to Samsung's full settings.
 - Optional Home/startup routing to the custom launcher, plus a **Samsung Home** shortcut inside it.
 - Snapshot-first deployment and guarded native routing/rollback helpers. No firmware flashing or permanent root daemon.
