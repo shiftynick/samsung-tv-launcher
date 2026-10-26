@@ -1,0 +1,11 @@
+{
+  "profile_version": 1,
+  "model": "QN77S90DDFXZA",
+  "firmware": "T-PTMDAKUC-0090-2130.0",
+  "os": "Tizen 9.0",
+  "kernel": "Linux 5.4.249 ARMv7",
+  "runtime": "6.0.9",
+  "registry": "/opt/dbspace/.pkgmgr_parser.db",
+  "groups": {},
+  "scope": "Launcher and Home routing only; no S90D cleanup group has been validated."
+}

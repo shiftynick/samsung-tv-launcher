@@ -1,0 +1,68 @@
+[
+  {
+    "Name": "Plex",
+    "Id": "kIciSQlYEM.plex",
+    "Asset": "app-icons/themes/cinema/plex.png",
+    "Description": "Movies & series",
+    "Fit": "contain-full",
+    "Background": "#202020",
+    "Width": 512,
+    "Height": 512,
+    "ThemeIcon": "plex"
+  },
+  {
+    "Name": "Netflix",
+    "Id": "org.tizen.netflix-app",
+    "Asset": "app-icons/themes/cinema/netflix.png",
+    "Description": "Movies & series",
+    "Fit": "contain-full",
+    "Background": "#FFFFFF",
+    "Width": 512,
+    "Height": 512,
+    "ThemeIcon": "netflix"
+  },
+  {
+    "Name": "Apple TV",
+    "Id": "com.samsung.tv.aria-video",
+    "Asset": "app-icons/themes/cinema/apple-tv.png",
+    "Description": "Movies & series",
+    "Fit": "contain-full",
+    "Background": "#292929",
+    "Width": 512,
+    "Height": 512,
+    "ThemeIcon": "apple-tv"
+  },
+  {
+    "Name": "Prime Video",
+    "Id": "org.tizen.primevideo",
+    "Asset": "app-icons/themes/cinema/prime-video.png",
+    "Description": "Movies & series",
+    "Fit": "contain-full",
+    "Background": "#0779FF",
+    "Width": 512,
+    "Height": 512,
+    "ThemeIcon": "prime-video"
+  },
+  {
+    "Name": "YouTube",
+    "Id": "com.samsung.tv.cobalt-yt",
+    "Asset": "app-icons/themes/cinema/youtube.png",
+    "Description": "Videos",
+    "Fit": "contain-full",
+    "Background": "#FFFFFF",
+    "Width": 512,
+    "Height": 512,
+    "ThemeIcon": "youtube"
+  },
+  {
+    "Name": "YouTube TV",
+    "Id": "PvWgqxV3Xa.YouTubeTV",
+    "Asset": "app-icons/themes/cinema/youtube-tv.png",
+    "Description": "Live TV",
+    "Fit": "contain-full",
+    "Background": "#101010",
+    "Width": 512,
+    "Height": 512,
+    "ThemeIcon": "youtube-tv"
+  }
+]
