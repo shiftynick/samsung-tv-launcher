@@ -1,6 +1,6 @@
 # Samsung TV Launcher
 
-A native Samsung Tizen home screen with switchable themes, six streaming-app shortcuts, HDMI switching, and a way back to Samsung Home. Four dinosaur theme packs are currently bundled. Built for an owner-controlled **S90D on Tizen 9**, using .NET/NUI and Samsung's existing picture, audio, app, and HDMI stack.
+A native Samsung Tizen home screen with switchable themes, six streaming-app shortcuts, HDMI switching, and a way back to Samsung Home. A Neutral starter and four dinosaur theme packs are bundled. Built for an owner-controlled **S90D on Tizen 9**, using .NET/NUI and Samsung's existing picture, audio, app, and HDMI stack.
 
 ![Artwork previews for Cinematic, 8-bit Jungle, Fossil Club and Dino Den](docs/images/themes-overview.png)
 
@@ -8,7 +8,7 @@ A native Samsung Tizen home screen with switchable themes, six streaming-app sho
 
 ## Features
 
-- **Cinematic**, **8-bit Jungle**, **Fossil Club**, and **Dino Den**, each with its own wallpaper and six custom app illustrations. Backgrounds have no titles or slogans.
+- **Neutral**, **Cinematic**, **8-bit Jungle**, **Fossil Club**, and **Dino Den**. The four dinosaur packs include title-free wallpapers and six custom app illustrations; Neutral uses native monograms. New data-only packs are discovered at runtime.
 - A remote-friendly theme picker. The selected theme is saved in the launcher's own app data and survives a launcher restart.
 - Shortcuts for **Plex, Netflix, Apple TV, Prime Video, YouTube, and YouTube TV**. These launch installed Tizen apps; they do not replace the apps or provide subscriptions.
 - HDMI switching, an input-picker shortcut, quick settings, and access to Samsung's full settings.
@@ -64,7 +64,7 @@ That creates local deployable files under `.local/package/`. **Building does not
 
 ## Customize
 
-The four current themes are selected in code. Replacing their art is straightforward; adding a new theme or palette still requires C# changes and a rebuild. A general data-only theme-pack format is [planned](docs/roadmap.md#theme-packs); it is not implemented yet.
+[Create, clone and validate theme packs](docs/theme-packs.md) with the host tool, then open Themes to discover them. Ordinary art/palette/font/style changes need no TV launcher rebuild. The loader validates paths, versions and resource bounds, and the picker paginates automatically.
 
 - App catalog: `launcher/assets/apps.json`; put private app-ID or catalog changes in ignored `apps.local.json`.
 - Theme art: `launcher/assets/app-icons/themes/`; PNG backgrounds and independent per-app tiles. Generated art and licensed fonts are included; downloaded publisher icons are not.
@@ -84,7 +84,8 @@ This repository was assembled from an explicit source/artwork allowlist, without
 python3 -m unittest discover -s tests -v
 python3 tools/build.py payloads
 dotnet run --project tests/CatalogTests.csproj -- launcher/assets/apps.json
-dotnet run --project tests/ThemePreferenceTests.csproj
+dotnet run --project tests/ThemePreferenceTests.csproj -- launcher/assets/app-icons/themes
+dotnet run --project tools/ThemeTool -- list launcher/assets/app-icons/themes
 python3 tools/audit_public.py
 ```
 

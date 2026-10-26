@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "fossil",
+  "name": "Fossil Club",
+  "order": 30,
+  "background": "background.png",
+  "icons": {
+    "plex": "plex.png",
+    "netflix": "netflix.png",
+    "apple-tv": "apple-tv.png",
+    "prime-video": "prime-video.png",
+    "youtube": "youtube.png",
+    "youtube-tv": "youtube-tv.png"
+  },
+  "palette": {
+    "background": "#F4EBDD",
+    "text": "#2E2114",
+    "muted": "#574533",
+    "accent": "#B84719",
+    "card": "#E6D9BF",
+    "control": "#E6D9BFCC",
+    "caption": "#F5EBD6F0",
+    "overlay": "#F5EBD6E6",
+    "header": "#F5EBD680",
+    "footer": "#F5EBD6E0"
+  },
+  "cornerRadius": 18,
+  "pixelArt": false,
+  "animationMs": 160,
+  "fontFamily": "Quiet Inter",
+  "fontVariants": true,
+  "license": "LICENSE.txt"
+}

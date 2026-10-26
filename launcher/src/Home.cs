@@ -21,10 +21,12 @@ public sealed class QuietHome : NUIApplication
  int artworkViewsCreated,pageArtworkCold;
  List<LibraryApp> library=new List<LibraryApp>();
  int libraryPage;
- string theme="cinema",themePath="",themeSaveError="";
- bool Pixel=>theme=="pixel";
- string ThemeRoot=>Root+"app-icons/themes/"+theme+"/";
- int Radius=>Pixel?0:18;
+ string theme="neutral",themePath="",themeSaveError="",userThemesDirectory="";
+ ThemeCatalog themes;
+ ThemePack currentTheme;
+ int themePage;
+ bool Pixel=>currentTheme.PixelArt;
+ int Radius=>currentTheme.CornerRadius;
  string libraryError="";
  TextLabel clock, notice, detail;
  TextLabel[] tabs;
@@ -70,8 +72,8 @@ public sealed class QuietHome : NUIApplication
   try{fontLoaded=FontClient.Instance.AddCustomFontDirectory(Root+"fonts");}catch{fontLoaded=false;}
   try{library=AppLibrary.Load(Root+"apps.json");}catch(Exception ex){libraryError=ex.Message;}
   themePath=System.IO.Path.Combine(Tizen.Applications.Application.Current.DirectoryInfo.Data,"launcher-theme.txt");
-  theme=ThemePreference.Load(themePath);ApplyPalette();
-  try{FontClient.Instance.AddCustomFontDirectory(Root+"app-icons/themes/fonts");}catch{}
+  userThemesDirectory=System.IO.Path.Combine(Tizen.Applications.Application.Current.DirectoryInfo.Data,"themes");
+  ReloadThemes();theme=ThemePreference.Load(themePath,themes);currentTheme=themes.Find(theme);ApplyPalette();RegisterThemeFont();
   Window.Default.BackgroundColor=new Color(.02f,.03f,.03f,1);
   Window.Default.Title="Samsung TV Launcher";Window.Default.KeyEvent+=OnKey;
   PreloadArtwork();
@@ -80,7 +82,7 @@ public sealed class QuietHome : NUIApplication
   clockTimer.Tick+=(s,e)=>{if(clock!=null)clock.Text=DateTime.Now.ToString("h:mm tt");return true;};clockTimer.Start();WriteState("created");
  }
  protected override void OnResume(){base.OnResume();clockTimer?.Start();RefreshSource();if(tabs!=null&&page==2){RefreshSettings();UpdateFocus(false);}WriteState("resumed");}
- protected override void OnAppControlReceived(AppControlReceivedEventArgs e){base.OnAppControlReceived(e);string requested;string requestedTheme;if(e.ReceivedAppControl.ExtraData.TryGet("quiet_theme",out requestedTheme)&&ThemePreference.IsKnown(requestedTheme)){SetTheme(requestedTheme);return;} if(e.ReceivedAppControl.ExtraData.TryGet("quiet_page",out requested)&&requested=="settings")OpenSettings("settings_request");else if(requested=="apps"){page=1;area=1;selected=0;BuildPage();}else if(requested=="themes"){page=3;area=1;selected=0;BuildPage();}else Home("home_request");}
+ protected override void OnAppControlReceived(AppControlReceivedEventArgs e){base.OnAppControlReceived(e);string requested;string requestedTheme;if(e.ReceivedAppControl.ExtraData.TryGet("quiet_theme",out requestedTheme)){SetTheme(requestedTheme);return;} if(e.ReceivedAppControl.ExtraData.TryGet("quiet_page",out requested)&&requested=="settings")OpenSettings("settings_request");else if(requested=="apps"){page=1;area=1;selected=0;BuildPage();}else if(requested=="themes"){OpenThemes();}else Home("home_request");}
  protected override void OnPause(){base.OnPause();editing="";clockTimer?.Stop();WriteState("paused");}
  void Home(string activity){clockTimer?.Start();RefreshSource();if(tabs!=null){bool unchanged=page==0&&area==1&&editing==""&&selected==SourceIndex();page=0;area=1;editing="";selected=SourceIndex();if(!unchanged)BuildPage();WriteState(activity);}}
  void OpenSettings(string activity){clockTimer?.Start();page=2;area=1;selected=0;editing="";BuildPage();WriteState(activity);}
@@ -91,16 +93,17 @@ public sealed class QuietHome : NUIApplication
  TextLabel Text(string text,int x,int y,int w,int h,float size,Color color,string face="Medium")
  {return (TextLabel)Add(Label(text,x,y,w,h,size,color,face));}
  TextLabel Label(string text,int x,int y,int w,int h,float size,Color color,string face="Medium")
- {return new TextLabel{Text=text,Position2D=new Position2D(x,y),Size2D=new Size2D(w,h),PixelSize=size,FontFamily=Pixel?"Press Start 2P":"Quiet Inter "+face,TextColor=color,VerticalAlignment=VerticalAlignment.Center};}
+ {return new TextLabel{Text=text,Position2D=new Position2D(x,y),Size2D=new Size2D(w,h),PixelSize=size,FontFamily=ThemeFont(face),TextColor=color,VerticalAlignment=VerticalAlignment.Center};}
  void BuildPage()
  {
   var stopwatch=Stopwatch.StartNew();
   if(focusAnimation!=null){focusAnimation.Stop();focusAnimation.Dispose();focusAnimation=null;}
   ParkArtwork();pageArtworkCold=0;
   foreach(var v in scene){Window.Default.Remove(v);v.Dispose();}scene.Clear();slots.Clear();
-  Add(new ImageView{ResourceUrl=ThemeRoot+"background.png",Size2D=new Size2D(1920,1080),FittingMode=FittingModeType.ScaleToFill,SamplingMode=Pixel?SamplingModeType.BoxThenNearest:SamplingModeType.BoxThenLanczos});
-  if(page!=0)Panel(0,0,1920,1080,theme=="fossil"?new Color(.96f,.92f,.84f,.90f):new Color(.015f,.025f,.035f,.86f),0);
-  if(page==0){Panel(0,0,1920,150,theme=="fossil"?new Color(.96f,.92f,.84f,.50f):new Color(0,0,0,.20f),0);Panel(0,850,1920,230,theme=="fossil"?new Color(.96f,.92f,.84f,.88f):new Color(0,0,0,.64f),0);}
+  Panel(0,0,1920,1080,Palette(currentTheme.Palette.Background),0);
+  if(currentTheme.BackgroundPath!=null)Add(new ImageView{ResourceUrl=currentTheme.BackgroundPath,Size2D=new Size2D(1920,1080),DesiredWidth=1920,DesiredHeight=1080,FittingMode=FittingModeType.ScaleToFill,SamplingMode=Pixel?SamplingModeType.BoxThenNearest:SamplingModeType.BoxThenLanczos});
+  if(page!=0)Panel(0,0,1920,1080,Palette(currentTheme.Palette.Overlay),0);
+  if(page==0){Panel(0,0,1920,150,Palette(currentTheme.Palette.Header),0);Panel(0,850,1920,230,Palette(currentTheme.Palette.Footer),0);}
   tabs=new TextLabel[4];string[] nav={"Home","Apps","Settings","Themes"};int[] tx={70,238,406,632};int[] tw={148,148,206,180};
   for(int i=0;i<4;i++){tabs[i]=Text(nav[i],tx[i],54,tw[i],64,Pixel?20:28,muted);tabs[i].HorizontalAlignment=HorizontalAlignment.Center;}
   clock=Text(DateTime.Now.ToString("h:mm tt"),1500,66,340,45,Pixel?20:27,ink);clock.HorizontalAlignment=HorizontalAlignment.End;
@@ -132,28 +135,33 @@ public sealed class QuietHome : NUIApplication
   selected=Math.Max(0,Math.Min(selected,slots.Count-1));UpdateFocus(false);
   buildMilliseconds=stopwatch.ElapsedMilliseconds;WriteState("page_ready");
  }
- void ApplyPalette()
+ Color Palette(string hex){var c=ThemePack.Color(hex);return new Color(c[0],c[1],c[2],c[3]);}
+ string ThemeFont(string face)=>currentTheme.FontVariants?currentTheme.FontFamily+" "+face:currentTheme.FontFamily;
+ void RegisterThemeFont(){try{if(currentTheme.FontPath!=null)FontClient.Instance.AddCustomFontDirectory(System.IO.Path.GetDirectoryName(currentTheme.FontPath));}catch{}}
+ void ApplyPalette(){ink=Palette(currentTheme.Palette.Text);muted=Palette(currentTheme.Palette.Muted);accent=Palette(currentTheme.Palette.Accent);}
+ void ReloadThemes(){themes=ThemeCatalog.Discover(Root+"app-icons/themes",userThemesDirectory);}
+ void ClearArtwork(){ParkArtwork();foreach(var cached in artworkCache.Values){cached.Parent.Remove(cached.Image);cached.Image.Dispose();}artworkCache.Clear();artworkViewsCreated=0;}
+ void UseTheme(ThemePack pack){ClearArtwork();currentTheme=pack;theme=pack.Id;ApplyPalette();RegisterThemeFont();PreloadThemeArtwork();}
+ void OpenThemes(bool focusCards=true)
  {
-  ink=theme=="fossil"?new Color(.18f,.13f,.08f,1):new Color(.98f,.96f,.90f,1);
-  muted=theme=="fossil"?new Color(.34f,.27f,.20f,1):new Color(.78f,.81f,.79f,1);
-  accent=theme=="fossil"?new Color(.72f,.28f,.10f,1):new Color(1,.72f,.24f,1);
+  ReloadThemes();UseTheme(themes.Find(theme)??themes.Find(themes.FallbackId));
+  int index=0;for(int i=0;i<themes.Items.Count;i++)if(themes.Items[i].Id==theme)index=i;
+  themePage=index/4;selected=index%4;page=3;area=focusCards?1+selected/2:0;BuildPage();
  }
  void SetTheme(string id)
  {
-  if(!ThemePreference.IsKnown(id)){ShowError("Unknown theme.");return;}
-  try{ThemePreference.Save(themePath,id);themeSaveError="";}
+  ReloadThemes();ThemePack pack=themes.Find(id);
+  if(pack==null){ShowError("This theme is unavailable. Choose another theme.");return;}
+  try{ThemePreference.Save(themePath,id,themes);themeSaveError="";}
   catch(Exception ex){themeSaveError=ex.GetType().Name;ShowError("Theme could not be saved. Please try again.");WriteState("theme_save_failed");return;}
-  ParkArtwork();
-  foreach(var cached in artworkCache.Values){cached.Parent.Remove(cached.Image);cached.Image.Dispose();}
-  artworkCache.Clear();artworkViewsCreated=0;
-  theme=id;ApplyPalette();PreloadThemeArtwork();page=0;area=1;selected=0;BuildPage();WriteState("theme_changed");
+  UseTheme(pack);page=0;area=1;selected=0;BuildPage();WriteState("theme_changed");
  }
  void HomeTile(string name,string action,LibraryApp app,int x,int y,int w,int h,int row)
  {
-  var card=Panel(x+w/2,y+h/2,w,h,theme=="fossil"?new Color(.90f,.85f,.75f,app==null?.8f:1):new Color(.02f,.04f,.045f,app==null?.72f:1),Radius);
+  var card=Panel(x+w/2,y+h/2,w,h,Palette(app==null?currentTheme.Palette.Control:currentTheme.Palette.Card),Radius);
   card.PivotPoint=new Position(.5f,.5f,.5f);card.PositionUsesPivotPoint=true;
   TextLabel caption;
-  if(app!=null){AddAppArtwork(card,app,w,h);Panel(x,y+h+8,w,58,theme=="fossil"?new Color(.96f,.92f,.84f,.94f):new Color(.01f,.025f,.03f,.88f),Radius);caption=Text(name,x,y+h+15,w,44,Pixel?19:27,ink,"Semibold");caption.HorizontalAlignment=HorizontalAlignment.Center;}
+  if(app!=null){AddAppArtwork(card,app,w,h);Panel(x,y+h+8,w,58,Palette(currentTheme.Palette.Caption),Radius);caption=Text(name,x,y+h+15,w,44,Pixel?19:27,ink,"Semibold");caption.HorizontalAlignment=HorizontalAlignment.Center;}
   else{caption=Label(name,0,0,w,h,Pixel?17:25,ink,"Medium");caption.HorizontalAlignment=HorizontalAlignment.Center;card.Add(caption);}
   var ring=new View{Size2D=new Size2D(w,h),BackgroundColor=new Color(0,0,0,0),CornerRadius=new Vector4(Radius,Radius,Radius,Radius),BorderlineWidth=Pixel?5:4,BorderlineColor=accent,Opacity=0};card.Add(ring);
   slots.Add(new Slot{Card=card,FocusRing=ring,Label=caption,Name=name,Action=action,Description=name,Row=row,X=x,Y=y,W=w,H=h});
@@ -161,14 +169,17 @@ public sealed class QuietHome : NUIApplication
  void BuildThemes()
  {
   Text("Choose your theme",80,150,1600,52,Pixel?23:36,ink,"Semibold");
-  for(int i=0;i<ThemePreference.Ids.Length;i++){
-   string id=ThemePreference.Ids[i];int x=250+(i%2)*840,y=235+(i/2)*390,w=580,h=326;
-   var card=Panel(x+w/2,y+h/2,w,h,new Color(.03f,.04f,.05f,1),Radius);card.PivotPoint=new Position(.5f,.5f,.5f);card.PositionUsesPivotPoint=true;
-   card.Add(new ImageView{ResourceUrl=Root+"app-icons/themes/"+id+"/background.png",Size2D=new Size2D(w,h),FittingMode=FittingModeType.ScaleToFill,SamplingMode=id=="pixel"?SamplingModeType.BoxThenNearest:SamplingModeType.BoxThenLanczos,CornerRadius=new Vector4(Radius,Radius,Radius,Radius)});
-   var label=Text(ThemePreference.Names[i]+(theme==id?"  (current)":""),x,y+h+10,w,42,Pixel?17:26,ink,"Semibold");label.HorizontalAlignment=HorizontalAlignment.Center;
+  int count=Math.Min(4,themes.Items.Count-themePage*4);
+  for(int local=0;local<count;local++){
+   var pack=themes.Items[themePage*4+local];int x=250+(local%2)*840,y=235+(local/2)*390,w=580,h=326;
+   var card=Panel(x+w/2,y+h/2,w,h,Palette(pack.Palette.Background),Radius);card.PivotPoint=new Position(.5f,.5f,.5f);card.PositionUsesPivotPoint=true;
+   if(pack.PreviewPath!=null)card.Add(new ImageView{ResourceUrl=pack.PreviewPath,Size2D=new Size2D(w,h),DesiredWidth=w*2,DesiredHeight=h*2,FittingMode=FittingModeType.ScaleToFill,SamplingMode=pack.PixelArt?SamplingModeType.BoxThenNearest:SamplingModeType.BoxThenLanczos,CornerRadius=new Vector4(Radius,Radius,Radius,Radius)});
+   else{var name=Label(pack.Name,0,0,w,h,Pixel?23:38,Palette(pack.Palette.Text),"Semibold");name.HorizontalAlignment=HorizontalAlignment.Center;card.Add(name);}
+   var label=Text(pack.Name+(theme==pack.Id?"  (current)":""),x,y+h+10,w,42,Pixel?17:26,ink,"Semibold");label.HorizontalAlignment=HorizontalAlignment.Center;
    var ring=new View{Size2D=new Size2D(w,h),BackgroundColor=new Color(0,0,0,0),CornerRadius=new Vector4(Radius,Radius,Radius,Radius),BorderlineWidth=5,BorderlineColor=accent,Opacity=0};card.Add(ring);
-   slots.Add(new Slot{Card=card,FocusRing=ring,Label=label,Name=ThemePreference.Names[i],Action="theme:"+id,Description=ThemePreference.Names[i],Row=i/2,X=x,Y=y,W=w,H=h});
+   slots.Add(new Slot{Card=card,FocusRing=ring,Label=label,Name=pack.Name,Action="theme:"+pack.Id,Description=pack.Name,Row=local/2,X=x,Y=y,W=w,H=h});
   }
+  if(themes.Items.Count>4)Text("Page "+(themePage+1)+" / "+((themes.Items.Count+3)/4),1540,160,300,35,Pixel?16:23,muted);
  }
  void BuildLibrary()
  {
@@ -179,7 +190,7 @@ public sealed class QuietHome : NUIApplication
   {
    var app=library[start+i];int x=80+(i%5)*358,y=266+(i/5)*245,w=328,h=184;
    var shadow=Panel(x-5,y+7,w+10,h+8,new Color(.12f,.15f,.25f,.08f),22);
-   var card=Panel(x+w/2,y+h/2,w,h,HexColor(app.Background),18);
+   var card=Panel(x+w/2,y+h/2,w,h,Palette(currentTheme.Palette.Card),Radius);
    card.PivotPoint=new Position(.5f,.5f,.5f);card.PositionUsesPivotPoint=true;
    AddAppArtwork(card,app,w,h);
    var ring=new View{Size2D=new Size2D(w,h),BackgroundColor=new Color(0,0,0,0),CornerRadius=new Vector4(18,18,18,18),BorderlineWidth=4,BorderlineColor=accent,Opacity=0};
@@ -202,6 +213,7 @@ public sealed class QuietHome : NUIApplication
  {
   if(!app.Utility){
    var cached=GetArtwork(app,w,h);
+   if(cached==null){string initials="";foreach(string word in app.Name.Split(' ',StringSplitOptions.RemoveEmptyEntries)){if(initials.Length==2)break;initials+=char.ToUpperInvariant(word[0]);}var label=Label(initials,12,0,w-24,h,Pixel?30:64,ink,"Semibold");label.HorizontalAlignment=HorizontalAlignment.Center;card.Add(label);return;}
    if(cached.Image.LoadingStatus!=ImageView.LoadingStatusType.Ready)pageArtworkCold++;
    cached.Parent.Remove(cached.Image);card.Add(cached.Image);cached.Parent=card;
   }
@@ -223,8 +235,9 @@ public sealed class QuietHome : NUIApplication
  {
   string key=app.Id+"@"+w+"x"+h;
   if(artworkCache.TryGetValue(key,out var cached))return cached;
-  string asset=ThemeRoot+app.ThemeIcon+".png";
-  bool themed=!string.IsNullOrEmpty(app.ThemeIcon)&&File.Exists(asset);
+  string asset=currentTheme.IconPath(app.ThemeIcon);
+  if(asset==null)return null;
+  bool themed=true;
   bool cover=!themed&&app.Fit=="cover",full=themed||cover||app.Fit=="contain-full";
   int iw=full?w:w-54,ih=full?h:h-40;var crop=themed?null:app.Crop;
   float cropWidth=crop==null?1:crop[2],cropHeight=crop==null?1:crop[3];
@@ -265,7 +278,7 @@ public sealed class QuietHome : NUIApplication
  {
   int x=80+column*450,y=262+row*332,w=410,h=286;
   var card=Panel(x+w/2,y+h/2,w,h,new Color(.02f,.04f,.05f,.95f),Radius);card.PivotPoint=new Position(.5f,.5f,.5f);card.PositionUsesPivotPoint=true;
-  card.BackgroundColor=theme=="fossil"?new Color(.94f,.88f,.78f,1):new Color(.025f,.05f,.06f,.96f);
+  card.BackgroundColor=Palette(currentTheme.Palette.Card);
   card.Add(Label(name,26,25,348,42,Pixel?20:29,ink,"Semibold"));
   var value=Label("",26,151,358,56,Pixel?23:38,ink,"Display");card.Add(value);
   card.Add(Label(Pixel?name=="Volume"||name=="Brightness"?"Left / Right to adjust":"Select to open":description,26,226,370,34,Pixel?13:20,muted));
@@ -294,9 +307,9 @@ public sealed class QuietHome : NUIApplication
  void UpdateFocus(bool animate=true)
  {
   if(focusAnimation!=null){focusAnimation.Stop();focusAnimation.Dispose();focusAnimation=null;}
-  if(animate&&!Pixel)focusAnimation=new Animation(160);
+  if(animate&&currentTheme.AnimationMs>0)focusAnimation=new Animation(currentTheme.AnimationMs);
   else animate=false;
-  for(int i=0;i<4;i++){tabs[i].TextColor=i==page?ink:muted;tabs[i].FontFamily=Pixel?"Press Start 2P":"Quiet Inter "+(i==page?"Semibold":"Medium");tabs[i].BackgroundColor=area==0&&i==page?new Color(accent.R,accent.G,accent.B,.22f):new Color(0,0,0,0);tabs[i].CornerRadius=new Vector4(Radius,Radius,Radius,Radius);}
+  for(int i=0;i<4;i++){tabs[i].TextColor=i==page?ink:muted;tabs[i].FontFamily=ThemeFont(i==page?"Semibold":"Medium");tabs[i].BackgroundColor=area==0&&i==page?new Color(accent.R,accent.G,accent.B,.22f):new Color(0,0,0,0);tabs[i].CornerRadius=new Vector4(Radius,Radius,Radius,Radius);}
   for(int i=0;i<slots.Count;i++){
    var s=slots[i];bool f=area!=0&&selected==i;
    float scale=f&&!Pixel?(page==1&&s.Row>=0?1.055f:page==2&&s.Row>=0?1.035f:s.Row==0?1.05f:s.Row==1?1.05f:1.10f):1;
@@ -306,7 +319,7 @@ public sealed class QuietHome : NUIApplication
    if(animate){focusAnimation.AnimateTo(s.Card,"Scale",new Vector3(scale,scale,1));focusAnimation.AnimateTo(s.Card,"Position",pos);}else{s.Card.Scale=new Vector3(scale,scale,1);s.Card.Position=pos;}
    if(s.Shadow!=null)s.Shadow.Opacity=f?1:.55f;
    if(s.FocusRing!=null)s.FocusRing.Opacity=f?1:0;
-   if(s.Label!=null&&page!=2)s.Label.FontFamily=Pixel?"Press Start 2P":"Quiet Inter "+(f?"Semibold":"Medium");
+   if(s.Label!=null&&page!=2)s.Label.FontFamily=ThemeFont(f?"Semibold":"Medium");
    if(f)s.Card.RaiseToTop();
   }
   if(animate&&focusAnimation!=null)focusAnimation.Play();
@@ -334,17 +347,30 @@ public sealed class QuietHome : NUIApplication
    if(k=="XF86Home"){Home("home_key");return;}
    if(k=="XF86SysMenu"||k=="XF86More"){OpenSettings("settings_key");return;}
    if(page==1&&HandleLibraryKey(k))return;
+   if(page==3&&HandleThemeKey(k))return;
    if(editing!=""){if(k=="Left"||k=="Right"){int d=k=="Left"?-1:1;if(editing=="volume")ChangeVolume(d);else ChangeBrightness(d);}else if(k=="Return"||k=="KP_Enter"||k=="XF86Back"||k=="Back"||k=="Escape"){editing="";UpdateFocus();}return;}
    if(k=="Up"){if(area==2){int col=Row(1).IndexOf(selected);area=1;selected=Row(0)[Math.Min(col,Row(0).Count-1)];}else if(area==1)area=0;UpdateFocus();}
    else if(k=="Down"){if(area==0){area=1;selected=Row(0)[0];}else if(area==1){int col=Row(0).IndexOf(selected);area=2;selected=Row(1)[Math.Min(col,Row(1).Count-1)];}UpdateFocus();}
    else if(k=="Left"||k=="Right"){
     int d=k=="Left"?-1:1;
-    if(area==0){page=(page+d+4)%4;selected=0;BuildPage();}
+    if(area==0){page=(page+d+4)%4;selected=0;if(page==3)OpenThemes(false);else BuildPage();}
     else{var r=Row(area-1);int n=r.IndexOf(selected);selected=r[(n+d+r.Count)%r.Count];UpdateFocus();}
    }
    else if(k=="Return"||k=="KP_Enter"){if(area==0){area=1;selected=0;UpdateFocus();}else Activate();}
    else if(k=="XF86Back"||k=="Back"||k=="Escape"||k=="XF86Exit"){if(page==2||page==3)Home("back_home");else SelectSource(lastSource);}
   }catch(Exception ex){ShowError(ex.Message);}
+ }
+ bool HandleThemeKey(string key)
+ {
+  if(key=="XF86Back"||key=="Back"||key=="Escape"||key=="XF86Exit"){Home("themes_back");return true;}
+  if(area==0)return false;
+  if(key!="Left"&&key!="Right"&&key!="Up"&&key!="Down")return false;
+  int absolute=themePage*4+selected,count=themes.Items.Count;
+  int next=ThemeNavigation.Move(count,absolute,key);
+  if(next<0){area=0;UpdateFocus();return true;}
+  int nextPage=next/4;selected=next%4;area=1+selected/2;
+  if(nextPage!=themePage){themePage=nextPage;BuildPage();}else UpdateFocus();
+  return true;
  }
  bool HandleLibraryKey(string key)
  {
@@ -366,7 +392,7 @@ public sealed class QuietHome : NUIApplication
   string a=slots[selected].Action;notice.Text="";
   if(a.StartsWith("theme:")){SetTheme(a.Substring(6));return;}
   if(a.StartsWith("hdmi:")){SelectSource(int.Parse(a.Substring(5)));return;}
-  if(a.StartsWith("page:")){page=int.Parse(a.Substring(5));selected=page==0?SourceIndex():0;area=1;BuildPage();return;}
+  if(a.StartsWith("page:")){page=int.Parse(a.Substring(5));if(page==3){OpenThemes();return;}selected=page==0?SourceIndex():0;area=1;BuildPage();return;}
   if(a.StartsWith("app:")){Launch(a.Substring(4));return;}
   if(a=="controllers"){Launch("org.tizen.menu","add-bluetooth-keyboard");return;}
   if(a=="network"){Launch("org.tizen.menu","networksettings");return;}
@@ -414,6 +440,6 @@ public sealed class QuietHome : NUIApplication
    if(r==0)r=app_control_send_launch_request(c,IntPtr.Zero,IntPtr.Zero);WriteState("launch:"+id+(menuItem==null?"":":"+menuItem)+":"+r);if(r!=0)ShowError("Could not open this screen. Try Advanced settings.");}finally{app_control_destroy(c);}
  }
  void ShowError(string text){notice.Text=text;}
- void WriteState(string activity){try{File.WriteAllText(StateFile,DateTime.UtcNow.ToString("o")+"\npage="+page+"\nselected="+selected+"\narea="+area+"\nactivity="+activity+"\nkey="+lastKey+"\nfont_loaded="+fontLoaded+"\nstyle=dinosaur\ntheme="+theme+"\ntheme_path="+themePath+"\ntheme_save_error="+themeSaveError+"\nbuild_ms="+buildMilliseconds+"\nlibrary_page="+libraryPage+"\nlibrary_count="+library.Count+"\nlibrary_error="+libraryError+"\nselected_name="+(selected>=0&&selected<slots.Count?slots[selected].Name:"")+"\nartwork_cached="+artworkCache.Count+"\nartwork_ready="+ArtworkReadyCount()+"\nartwork_pending="+ArtworkPending()+"\nartwork_views_created="+artworkViewsCreated+"\npage_artwork_cold="+pageArtworkCold+"\nprocess_id="+Process.GetCurrentProcess().Id+"\nediting="+editing+"\nvolume="+currentVolume+"\nmute="+currentMute+"\nbrightness="+SettingValue("brightness")+"\ngame-mode="+SettingValue("game-mode")+"\nsleeptimer="+SettingValue("sleeptimer")+"\n");}catch{}}
+ void WriteState(string activity){try{File.WriteAllText(StateFile,DateTime.UtcNow.ToString("o")+"\npage="+page+"\nselected="+selected+"\narea="+area+"\nactivity="+activity+"\nkey="+lastKey+"\nfont_loaded="+fontLoaded+"\nstyle=theme-pack\ntheme="+theme+"\ntheme_path="+themePath+"\ntheme_save_error="+themeSaveError+"\ntheme_count="+themes.Items.Count+"\ntheme_page="+themePage+"\ntheme_errors="+string.Join(";",themes.Errors)+"\nbuild_ms="+buildMilliseconds+"\nlibrary_page="+libraryPage+"\nlibrary_count="+library.Count+"\nlibrary_error="+libraryError+"\nselected_name="+(selected>=0&&selected<slots.Count?slots[selected].Name:"")+"\nartwork_cached="+artworkCache.Count+"\nartwork_ready="+ArtworkReadyCount()+"\nartwork_pending="+ArtworkPending()+"\nartwork_views_created="+artworkViewsCreated+"\npage_artwork_cold="+pageArtworkCold+"\nprocess_id="+Process.GetCurrentProcess().Id+"\nediting="+editing+"\nvolume="+currentVolume+"\nmute="+currentMute+"\nbrightness="+SettingValue("brightness")+"\ngame-mode="+SettingValue("game-mode")+"\nsleeptimer="+SettingValue("sleeptimer")+"\n");}catch{}}
  public static void Main(string[] args){using(var app=new QuietHome())app.Run(args);}
 }

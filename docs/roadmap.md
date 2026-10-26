@@ -1,6 +1,6 @@
 # Experience improvements under investigation
 
-These are research findings and proposed next steps, not TV changes or completed features. The repository is now named Samsung TV Launcher; the initial dinosaur designs are bundled themes rather than the project's identity.
+This document separates research and proposed changes from implemented launcher features. The repository is now named Samsung TV Launcher; the initial dinosaur designs are bundled themes rather than the project's identity.
 
 ## OLED optimization
 
@@ -26,14 +26,10 @@ Start with documented consent controls: Viewing Information Services/ACR, intere
 
 Next, capture a private network/DNS baseline and validate opt-outs. If needed, add narrowly selected DNS/firewall rules and separately verified service changes, with rollback and tests for every streaming app, app updates, authentication, DRM and HDMI. Blocking all Samsung destinations can break useful functions. A clean Home screen is not evidence that background tracking is stopped; a missing process is not a decrypted traffic audit. Raw viewing/account/device traffic remains private and must never be published as an issue attachment.
 
-No S90D privacy cleanup or traffic audit has been performed yet.
+A private read-only S90D service/process/settings inventory has been collected. It does not establish consent state or actual data transmission. No S90D privacy cleanup or traffic audit has been performed yet.
 
 ## Theme packs
 
-Current implementation: four hardcoded theme IDs/display names; theme-specific palette/radius/font/sampling branches in Home.cs; a four-choice picker; PNG art in per-theme folders. Current artwork is independently replaceable, but arbitrary new themes are not discovered automatically.
+Implemented: runtime discovery of data-only theme folders, a paginated picker, palette/art/font/style manifests, bounded validation, Neutral recovery and host-side create/clone/validate tools. The four original dinosaur designs remain bundled alongside Neutral. See [theme-pack authoring](theme-packs.md).
 
-Proposed format: a folder containing `theme.json`, a wallpaper, optional preview/font/license files and app artwork indexed by stable keys such as `plex`, `netflix` and `youtube-tv`. A manifest would declare ID, name, palette, text colors, focus treatment, corner radius, font, image sampling and animation preference. New themes would be discovered at runtime and paginated in the picker, with no C# rebuild for ordinary art/palette changes.
-
-Proposed validation: unique IDs, schema version, bounded image dimensions and total decoded memory, sufficient required assets or explicit fallbacks, safe relative paths, known style values, and a default neutral theme if a pack is missing/corrupt. Keep theme data separate from app IDs, HDMI/source configuration and device-specific access profiles. Theme packs contain no executable scripts or native code. Include a validator and starter template so contributors can build their own pack without owning the original TV.
-
-The initial implementation can support authorized host-side installation/reload. USB import, online theme downloads, a marketplace and arbitrary code-defined layouts are separate features, not promises for the first manifest format. Existing dinosaur themes remain available, but a neutral starter should make the generic project useful without dinosaur art.
+Authorized host-side installation and reload is the initial workflow. USB import, online downloads, a marketplace and arbitrary code-defined layouts are separate possible features. Theme data remains separate from app IDs, HDMI configuration and device access profiles.

@@ -1,15 +1,59 @@
 using System;
 using System.IO;
-public static class ThemePreferenceTests {
- static void Check(bool ok,string what){if(!ok)throw new Exception(what);}
- public static void Main(){string dir=System.IO.Path.Combine(System.IO.Path.GetTempPath(),"quiet-theme-tests-"+Guid.NewGuid());string path=System.IO.Path.Combine(dir,"data","theme.txt");
- try{
-  Check(ThemePreference.Load(path)=="cinema","Missing preference must use cinematic default");
-  foreach(string id in ThemePreference.Ids){ThemePreference.Save(path,id);Check(ThemePreference.Load(path)==id,"Theme must survive reload: "+id);Check(!File.Exists(path+".new"),"Atomic save left temporary file");}
-  bool rejected=false;try{ThemePreference.Save(path,"../other");}catch(ArgumentException){rejected=true;}Check(rejected,"Unknown theme accepted");Check(ThemePreference.Load(path)=="den","Rejected theme overwrote selection");
-  File.WriteAllText(path,"invalid");Check(ThemePreference.Load(path)=="cinema","Corrupt preference must use safe default");
-  File.WriteAllText(path,"pixel\n");Check(ThemePreference.Load(path)=="pixel","Persisted theme must permit trailing newline");
-  Check(ThemePreference.Name("fossil")=="Fossil Club","Display label mismatch");
-  Console.WriteLine("Theme persistence: all four themes round-trip; invalid values rejected without overwriting saved selection; corrupt and missing preferences recover safely.");
- }finally{if(Directory.Exists(dir))Directory.Delete(dir,true);}}
+using System.Linq;
+using System.Text.Json;
+public static class ThemePreferenceTests
+{
+ static int checks;
+ static void Check(bool ok,string message){checks++;if(!ok)throw new Exception(message);}
+ static void Reject(Action action,string message){bool rejected=false;try{action();}catch(Exception e)when(e is IOException||e is InvalidDataException||e is ArgumentException||e is JsonException){rejected=true;}Check(rejected,message);}
+ static string Pack(string root,string folder,string json){string dir=Path.Combine(root,folder);Directory.CreateDirectory(dir);File.WriteAllText(Path.Combine(dir,"theme.json"),json);return dir;}
+ static string Basic(string id,string name)=>JsonSerializer.Serialize(new{schemaVersion=1,id,name});
+ public static void Main(string[] args)
+ {
+  string root=Path.Combine(Path.GetTempPath(),"theme-tests-"+Guid.NewGuid());Directory.CreateDirectory(root);
+  try{
+   string packs=Path.Combine(root,"packs"),data=Path.Combine(root,"data","theme.txt");Directory.CreateDirectory(packs);
+   Pack(packs,"custom",Basic("my-new-style","My new style"));
+   var catalog=ThemeCatalog.Discover(packs);
+   Check(catalog.Find("my-new-style")!=null,"New themes must be discovered without editing a C# list");
+   Check(catalog.Find("neutral")!=null,"Neutral recovery theme must always exist");
+   Check(ThemePreference.Load(data,catalog)=="neutral","Missing preference must recover to Neutral");
+   foreach(var pack in catalog.Items){ThemePreference.Save(data,pack.Id,catalog);Check(ThemePreference.Load(data,catalog)==pack.Id,"Preference must survive reload");Check(!File.Exists(data+".new"),"Atomic save left staging file");}
+   ThemePreference.Save(data,"my-new-style",catalog);
+   Reject(()=>ThemePreference.Save(data,"../escape",catalog),"Unknown theme must not be saved");
+   Check(ThemePreference.Load(data,catalog)=="my-new-style","Rejected save overwrote valid selection");
+   File.WriteAllText(data,"corrupt");Check(ThemePreference.Load(data,catalog)=="neutral","Corrupt preference must recover");
+   File.WriteAllText(data,"my-new-style\n");Check(ThemePreference.Load(data,catalog)=="my-new-style","Saved choice permits trailing newline");
+   File.Delete(Path.Combine(packs,"custom","theme.json"));catalog=ThemeCatalog.Discover(packs);
+   Check(ThemePreference.Load(data,catalog)=="neutral","Removed saved pack must recover without crashing");
+   string bad=Pack(root,"bad",Basic("bad","Bad"));string manifest=Path.Combine(bad,"theme.json");
+   foreach(string json in new[]{"{}","{\"schemaVersion\":2,\"id\":\"bad\",\"name\":\"Bad\"}","{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"unknown\":1}","{\"schemaVersion\":1,\"id\":\"bad\",\"id\":\"again\",\"name\":\"Bad\"}","{\"schemaVersion\":1,\"id\":\"../escape\",\"name\":\"Bad\"}","{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"palette\":{\"text\":\"red\"}}","{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"cornerRadius\":100}"}){
+    File.WriteAllText(manifest,json);Reject(()=>ThemePack.Load(manifest),"Invalid manifest accepted: "+json);
+   }
+   byte[] png=Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jX1sAAAAASUVORK5CYII=");
+   File.WriteAllBytes(Path.Combine(root,"outside.png"),png);
+   foreach(string asset in new[]{"../outside.png","/outside.png","https://example.com/asset.png","nested/../../outside.png","C:\\asset.png"}){
+    File.WriteAllText(manifest,JsonSerializer.Serialize(new{schemaVersion=1,id="bad",name="Bad",background=asset}));Reject(()=>ThemePack.Load(manifest),"Unsafe asset accepted");
+   }
+   File.WriteAllBytes(Path.Combine(bad,"image.png"),png);File.WriteAllText(manifest,"{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"background\":\"image.png\"}");
+   var loaded=ThemePack.Load(manifest);Check(loaded.BackgroundPath!=null,"Valid PNG rejected");
+   File.Delete(Path.Combine(bad,"image.png"));Check(loaded.BackgroundPath==null,"Deleted artwork must fall back safely");
+   byte[] oversized=(byte[])png.Clone();oversized[16]=0;oversized[17]=0;oversized[18]=19;oversized[19]=136;File.WriteAllBytes(Path.Combine(bad,"image.png"),oversized);
+   Reject(()=>ThemePack.Load(manifest),"Oversized image accepted");
+   File.WriteAllBytes(Path.Combine(bad,"image.png"),png.Take(png.Length-8).ToArray());Reject(()=>ThemePack.Load(manifest),"Truncated PNG accepted");
+   if(Path.DirectorySeparatorChar=='/'){
+    File.Delete(Path.Combine(bad,"image.png"));File.CreateSymbolicLink(Path.Combine(bad,"image.png"),Path.Combine(root,"outside.png"));Reject(()=>ThemePack.Load(manifest),"Symlink asset accepted");File.Delete(Path.Combine(bad,"image.png"));
+   }
+   File.WriteAllText(Path.Combine(bad,"font-license.txt"),new string('x',65537));
+   File.WriteAllText(manifest,"{\"schemaVersion\":1,\"id\":\"bad\",\"name\":\"Bad\",\"fontLicense\":\"font-license.txt\"}");
+   Reject(()=>ThemePack.Load(manifest),"Oversized standalone font license accepted");
+   string duplicate=Path.Combine(root,"duplicates");Pack(duplicate,"one",Basic("same","One"));Pack(duplicate,"two",Basic("same","Two"));Pack(duplicate,"broken","{broken");
+   var duplicates=ThemeCatalog.Discover(duplicate);Check(duplicates.Items.Count(p=>p.Id=="same")==1,"Duplicate theme IDs must be rejected");Check(duplicates.Errors.Count==2,"Bad packs must be reported and isolated");Check(duplicates.Find("neutral")!=null,"Bad packs must not remove recovery theme");
+   for(int count=1;count<=65;count++)for(int item=0;item<count;item++)foreach(string key in new[]{"Left","Right","Up","Down"}){int next=ThemeNavigation.Move(count,item,key);Check(next>=-1&&next<count,"Picker navigation out of range");}
+   Check(ThemeNavigation.Move(5,3,"Down")==4,"Partial last picker page must clamp column");Check(ThemeNavigation.Move(5,4,"Up")==2,"Picker must return to previous page");
+   if(args.Length==1){var bundled=ThemeCatalog.Discover(args[0]);Check(bundled.Errors.Count==0,string.Join(";",bundled.Errors));Check(bundled.Items.Count>=5,"Bundled manifest packs were not found");}
+   Console.WriteLine("Theme packs, validation, recovery, preference persistence and picker pagination: "+checks+" checks passed.");
+  }finally{Directory.Delete(root,true);}
+ }
 }

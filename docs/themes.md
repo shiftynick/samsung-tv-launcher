@@ -1,6 +1,6 @@
-# Dinosaur themes
+# Bundled themes
 
-The Themes control selects one of four styles. Each includes a title-free 1920×1080 wallpaper and six independent square illustrations: amber egg/chevron (Plex), red T-rex skull or baby T-rex (Netflix), pale sauropod (Apple TV), cyan raptor (Prime Video), red pterosaur/play motif (YouTube), and a separate flying reptile/television motif (YouTube TV).
+The Themes control discovers packs at runtime. Neutral is a flat, label/monogram-based starter; the four dinosaur styles each include a title-free 1920×1080 wallpaper and six independent square illustrations: amber egg/chevron (Plex), red T-rex skull or baby T-rex (Netflix), pale sauropod (Apple TV), cyan raptor (Prime Video), red pterosaur/play motif (YouTube), and a separate flying reptile/television motif (YouTube TV).
 
 | Theme | Direction |
 | --- | --- |
@@ -9,7 +9,9 @@ The Themes control selects one of four styles. Each includes a title-free 1920×
 | Fossil Club | Ivory limestone, engraved skeletons, mineral-colored fossils and terracotta focus |
 | Dino Den | Clay dinosaur dioramas, warm island sunset and friendly sculpted characters |
 
-Assets live in `launcher/assets/app-icons/themes/{cinema,pixel,fossil,den}/`. App names are not embedded in wallpapers. Focus borders, app labels, clock and controls are rendered by NUI. The preference is saved only in the launcher's own writable data directory; unknown or corrupt values fall back to Cinematic. Save uses an adjacent temporary file and atomic replacement. Image views for inactive themes are released; the cache is bounded to the active theme.
+Assets live in `launcher/assets/app-icons/themes/{cinema,pixel,fossil,den}/`. App names are not embedded in wallpapers. Focus borders, app labels, clock and controls are rendered by NUI. The preference is saved only in the launcher's own writable data directory; unknown or corrupt values fall back to Neutral. Save uses an adjacent temporary file and atomic replacement. Image views for inactive themes are released; the cache is bounded to the active theme.
+
+For authoring, validation and installation without a C# rebuild, see [theme packs](theme-packs.md). The picker paginates beyond four choices.
 
 ## Reproduction prompts
 

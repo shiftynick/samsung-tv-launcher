@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "cinema",
+  "name": "Cinematic",
+  "order": 10,
+  "background": "background.png",
+  "icons": {
+    "plex": "plex.png",
+    "netflix": "netflix.png",
+    "apple-tv": "apple-tv.png",
+    "prime-video": "prime-video.png",
+    "youtube": "youtube.png",
+    "youtube-tv": "youtube-tv.png"
+  },
+  "palette": {
+    "background": "#081416",
+    "text": "#FAF5E6",
+    "muted": "#C7CFC9",
+    "accent": "#FFB83D",
+    "card": "#051014",
+    "control": "#051014B8",
+    "caption": "#031016E0",
+    "overlay": "#041018DB",
+    "header": "#00000033",
+    "footer": "#000000A3"
+  },
+  "cornerRadius": 18,
+  "pixelArt": false,
+  "animationMs": 160,
+  "fontFamily": "Quiet Inter",
+  "fontVariants": true,
+  "license": "LICENSE.txt"
+}

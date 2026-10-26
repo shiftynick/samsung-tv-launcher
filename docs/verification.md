@@ -17,10 +17,12 @@ The owner confirmed the initial launcher rendered, remote navigation worked, Ple
 - Theme picker opened and the process remained running with six catalog entries.
 - Home/startup operation and four preference values were changed using native APIs and read back. Existing Home/startup Buxton read/write privileges were compared before/after.
 
+The manifest-based update was also checked on this TV: all five bundled packs loaded without catalog/preference errors; the four artwork packs each reached 12/12 retained image views, and Neutral used no artwork views. A temporary sixth data-only pack was discovered, selected and removed while the same launcher process remained running, without rebuilding or restarting it. The picker reached its second page, the original Dino Den choice survived a new launcher process, and native routing readback remained unchanged. These are automated state/decoding checks; visible review of this update is a separate owner check.
+
 A launcher process restart is not a TV cold boot. The owner confirmed the physical Home → Samsung Home shortcut → Home round trip. The owner also confirmed that the custom launcher opened automatically after a full TV restart. Standby/wake remains a separate check. Software launch/readback checks do not establish playback quality, latency, absence of tracking, or boot behavior.
 
 ## Offline checks
 
-Python tests cover explicit identity gates, bounded checksum-verified transfers, synthetic cleanup apply/restore and state drift, routing SQL, recipe syntax, package assets and documentation links. Native catalog tests cover navigation bounds and malformed catalogs. Theme preference tests cover every theme, missing/corrupt state, atomic-save cleanup and refusal to overwrite a valid choice with an invalid value. The NUI launcher and helpers were compiled against private matching device references.
+Python tests cover explicit identity gates, bounded checksum-verified transfers, synthetic cleanup apply/restore and state drift, routing SQL, recipe syntax, package assets and documentation links. Native catalog tests cover navigation bounds and malformed catalogs. Theme tests cover dynamic discovery, invalid manifests/assets and unsafe paths, Neutral recovery, pagination bounds, missing/corrupt preferences, atomic-save cleanup and refusal to overwrite a valid choice with an invalid value. The NUI launcher and helpers were compiled against private matching device references.
 
 No S90D privacy cleanup, decrypted network audit, controlled latency benchmark or hardware-level recovery was performed. The upstream U8000F observation file remains scoped to that other device.
