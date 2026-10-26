@@ -1,6 +1,6 @@
 # Living scene layers
 
-Neon District's second motion pass moves actual scene artwork: three hovercars travel through the city, two translucent mist layers drift near the waterfront, and the selected Netflix robot cat blinks. The generic rain particles are disabled for this pack. The four dinosaur packs keep their original particle effects until matching scene artwork is authored for them.
+Neon District's second motion pass moves actual scene artwork: three hovercars travel through the city, two translucent mist layers drift near the waterfront, and the selected Netflix robot cat blinks. The generic rain particles are disabled for this pack. All four dinosaur packs now have matching scene artwork as well: [Cinematic](cinema-motion.md), [8-bit Jungle](pixel-motion.md), [Fossil Club](fossil-motion.md) and [Dino Den](den-motion.md). Their generic particles and whole-tile float are disabled.
 
 The renderer remains native NUI. It uses fixed PNG textures, looping property animations and a single selected-tile alternate frame, not video playback or a per-frame managed timer. Off removes all layers/alternate frames. Scene/tile motion runs only on Home in the foreground, pauses behind other apps, and is disposed when changing page/theme. Motion modes remain independent of the selected theme. These decorative effects do not replace OLED care or an idle screen saver.
 
@@ -14,7 +14,7 @@ Within `motion`, `layers` is an ordered array (drawn over the background and beh
 
 Coordinates refer to the 1920×1080 canvas. At most eight layers are allowed, each at most one screen in size; their combined rectangle area is capped at two screens. Duration is 3–90 seconds. Positions are bounded, opacity is 0–1, unknown fields are rejected, and referenced PNG files share the pack's existing file/path/pixel budgets. Transparent assets must retain alpha. `phase` staggers traffic so cars are visible at startup rather than waiting through an empty loop.
 
-`tiles` maps an existing app icon key to an alternate PNG `image` and a 3–20 second cycle `seconds`. The current effect is a brief blink: crossfade to the alternate frame, hold briefly, then return to the base. Only the selected Home app creates an alternate view. It works independently of `iconFloat`; Neon District disables the old whole-tile float. Matching composition between the two frames matters more than extra detail.
+`tiles` maps an existing app icon key to an alternate PNG `image` and a 3–20 second cycle `seconds`. The optional tile `kind` is `blink` (the default brief eyelid crossfade), `pulse` (slow blend into a light/material alternate), or `flutter` (two alternating holds per cycle). Unknown kinds are rejected. Only the selected Home app creates an alternate view. It works independently of `iconFloat`; Neon District disables the old whole-tile float. Matching composition between the two frames matters more than extra detail. Scene and tile image sampling follows `pixelArt`, so pixel packs use nearest-neighbor sampling rather than softened interpolation.
 
 See the [Neon District manifest](../launcher/assets/app-icons/themes/cyberpunk/theme.json) for a complete example. The shared ThemeTool validates and clones the referenced scene/frame assets too. Adding these fields to an installed older launcher requires updating the loader first, since it deliberately rejects unknown fields.
 

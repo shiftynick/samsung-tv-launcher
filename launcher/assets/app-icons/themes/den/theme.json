@@ -31,9 +31,44 @@
   "fontVariants": true,
   "license": "LICENSE.txt",
   "motion": {
-    "effect": "dust",
-    "count": 10,
+    "effect": "none",
+    "count": 0,
     "seconds": 18,
-    "iconFloat": true
+    "iconFloat": false,
+    "layers": [
+      {
+        "asset": "scene/volcano-smoke.png",
+        "x": 1440,
+        "y": -22,
+        "width": 430,
+        "height": 177,
+        "toX": 1510,
+        "toY": -48,
+        "seconds": 34,
+        "opacity": 0.65,
+        "phase": 0.18,
+        "kind": "drift"
+      },
+      {
+        "asset": "scene/clay-pterosaur.png",
+        "x": 430,
+        "y": 80,
+        "width": 180,
+        "height": 101,
+        "toX": 1250,
+        "toY": 112,
+        "seconds": 55,
+        "opacity": 0.9,
+        "phase": 0.34,
+        "kind": "travel"
+      }
+    ],
+    "tiles": {
+      "netflix": {
+        "image": "scene/baby-blink.png",
+        "seconds": 7,
+        "kind": "blink"
+      }
+    }
   }
 }

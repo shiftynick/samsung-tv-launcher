@@ -17,7 +17,7 @@ public sealed partial class QuietHome
    string path=currentTheme.ScenePath(layer);
    if(layer.Asset!=null&&path==null)continue;
    View visual;
-   if(path!=null)visual=Add(new ImageView{ResourceUrl=path,ReleasePolicy=ReleasePolicyType.Destroyed,Position2D=new Position2D(layer.X,layer.Y),Size2D=new Size2D(layer.Width,layer.Height),DesiredWidth=layer.Width,DesiredHeight=layer.Height,FittingMode=FittingModeType.ScaleToFill,Opacity=layer.Opacity});
+   if(path!=null)visual=Add(new ImageView{ResourceUrl=path,ReleasePolicy=ReleasePolicyType.Destroyed,Position2D=new Position2D(layer.X,layer.Y),Size2D=new Size2D(layer.Width,layer.Height),DesiredWidth=layer.Width,DesiredHeight=layer.Height,FittingMode=FittingModeType.ScaleToFill,SamplingMode=Pixel?SamplingModeType.BoxThenNearest:SamplingModeType.BoxThenLanczos,Opacity=layer.Opacity});
    else visual=Panel(layer.X,layer.Y,layer.Width,layer.Height,Palette(layer.Color),Math.Min(12,layer.Height/2));
    if(visual is ImageView sceneImage){sceneImages.Add(sceneImage);sceneImage.ResourceReady+=(sender,args)=>WriteState("scene_ready");}
    var animation=new Animation(layer.Seconds*1000){Looping=true};ambientAnimations.Add(animation);
@@ -38,12 +38,18 @@ public sealed partial class QuietHome
   string path=currentTheme.TileFramePath(key);if(path==null||floatingIcon==null)return;
   var profile=currentTheme.Motion.Tiles[key];
   alternateParent=slots[selected].Card;
-  alternateTile=new ImageView{ResourceUrl=path,ReleasePolicy=ReleasePolicyType.Destroyed,Position2D=new Position2D(0,0),Size2D=new Size2D(272,272),DesiredWidth=544,DesiredHeight=544,FittingMode=FittingModeType.ShrinkToFit,CornerRadius=new Vector4(Radius,Radius,Radius,Radius),Opacity=0};
+  alternateTile=new ImageView{ResourceUrl=path,ReleasePolicy=ReleasePolicyType.Destroyed,Position2D=new Position2D(0,0),Size2D=new Size2D(272,272),DesiredWidth=544,DesiredHeight=544,FittingMode=FittingModeType.ShrinkToFit,SamplingMode=Pixel?SamplingModeType.BoxThenNearest:SamplingModeType.BoxThenLanczos,CornerRadius=new Vector4(Radius,Radius,Radius,Radius),Opacity=0};
   // Parent with the base artwork so character frames follow any selected-icon transform.
   alternateTile.ResourceReady+=(sender,args)=>WriteState("tile_frame_ready");
   floatingIcon.Add(alternateTile);alternateParent=floatingIcon;
   using(var frames=new KeyFrames()){
-   frames.Add(0f,0f);frames.Add(.70f,0f);frames.Add(.715f,1f);frames.Add(.745f,1f);frames.Add(.76f,0f);frames.Add(1f,0f);
+   if(profile.Kind=="pulse"){
+    frames.Add(0f,0f);frames.Add(.5f,1f);frames.Add(1f,0f);
+   }else if(profile.Kind=="flutter"){
+    frames.Add(0f,0f);frames.Add(.20f,0f);frames.Add(.25f,1f);frames.Add(.45f,1f);frames.Add(.50f,0f);frames.Add(.70f,0f);frames.Add(.75f,1f);frames.Add(.95f,1f);frames.Add(1f,0f);
+   }else{
+    frames.Add(0f,0f);frames.Add(.70f,0f);frames.Add(.715f,1f);frames.Add(.745f,1f);frames.Add(.76f,0f);frames.Add(1f,0f);
+   }
    iconAnimation.AnimateBetween(alternateTile,"Opacity",frames,0,profile.Seconds*1000);
   }
  }

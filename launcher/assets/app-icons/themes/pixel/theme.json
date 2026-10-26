@@ -33,9 +33,56 @@
   "fontLicense": "fonts/OFL.txt",
   "license": "LICENSE.txt",
   "motion": {
-    "effect": "stars",
-    "count": 10,
+    "effect": "none",
+    "count": 0,
     "seconds": 18,
-    "iconFloat": false
+    "iconFloat": false,
+    "layers": [
+      {
+        "asset": "scene/sunset-cloud.png",
+        "x": 650,
+        "y": 58,
+        "width": 328,
+        "height": 56,
+        "toX": 890,
+        "toY": 58,
+        "seconds": 72,
+        "opacity": 0.64,
+        "phase": 0.2,
+        "kind": "drift"
+      },
+      {
+        "asset": "scene/sunset-cloud.png",
+        "x": 1390,
+        "y": 236,
+        "width": 328,
+        "height": 56,
+        "toX": 1170,
+        "toY": 236,
+        "seconds": 84,
+        "opacity": 0.48,
+        "phase": 0.65,
+        "kind": "drift"
+      },
+      {
+        "asset": "scene/pterosaur.png",
+        "x": 1810,
+        "y": 4,
+        "width": 168,
+        "height": 96,
+        "toX": 580,
+        "toY": 12,
+        "seconds": 46,
+        "opacity": 0.94,
+        "phase": 0.38,
+        "kind": "travel"
+      }
+    ],
+    "tiles": {
+      "prime-video": {
+        "image": "scene/raptor-blink.png",
+        "seconds": 7
+      }
+    }
   }
 }

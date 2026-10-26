@@ -31,9 +31,31 @@
   "fontVariants": true,
   "license": "LICENSE.txt",
   "motion": {
-    "effect": "dust",
-    "count": 10,
+    "effect": "none",
+    "count": 0,
     "seconds": 18,
-    "iconFloat": true
+    "iconFloat": false,
+    "layers": [
+      {
+        "asset": "scene/raking-light.png",
+        "x": 450,
+        "y": -170,
+        "width": 1440,
+        "height": 960,
+        "toX": 620,
+        "toY": -110,
+        "seconds": 48,
+        "opacity": 0.14,
+        "phase": 0.22,
+        "kind": "drift"
+      }
+    ],
+    "tiles": {
+      "prime-video": {
+        "image": "scene/raptor-amber-light.png",
+        "seconds": 12,
+        "kind": "pulse"
+      }
+    }
   }
 }

@@ -31,9 +31,69 @@
   "fontVariants": true,
   "license": "LICENSE.txt",
   "motion": {
-    "effect": "fireflies",
-    "count": 10,
+    "effect": "none",
+    "count": 0,
     "seconds": 18,
-    "iconFloat": true
+    "iconFloat": false,
+    "layers": [
+      {
+        "asset": "scene/valley-mist.png",
+        "x": 150,
+        "y": 255,
+        "width": 1050,
+        "height": 270,
+        "toX": 230,
+        "toY": 245,
+        "seconds": 34,
+        "opacity": 0.2,
+        "phase": 0.18,
+        "kind": "drift"
+      },
+      {
+        "asset": "scene/valley-mist.png",
+        "x": 1110,
+        "y": 285,
+        "width": 650,
+        "height": 200,
+        "toX": 1050,
+        "toY": 275,
+        "seconds": 43,
+        "opacity": 0.26,
+        "phase": 0.64,
+        "kind": "drift"
+      },
+      {
+        "asset": "scene/pterosaur-glide.png",
+        "x": 700,
+        "y": 90,
+        "width": 144,
+        "height": 72,
+        "toX": 1120,
+        "toY": 120,
+        "seconds": 48,
+        "opacity": 0.72,
+        "phase": 0.24,
+        "kind": "travel"
+      },
+      {
+        "asset": "scene/pterosaur-glide.png",
+        "x": 540,
+        "y": 150,
+        "width": 90,
+        "height": 45,
+        "toX": 980,
+        "toY": 135,
+        "seconds": 61,
+        "opacity": 0.52,
+        "phase": 0.57,
+        "kind": "travel"
+      }
+    ],
+    "tiles": {
+      "apple-tv": {
+        "image": "scene/sauropod-blink.png",
+        "seconds": 8
+      }
+    }
   }
 }

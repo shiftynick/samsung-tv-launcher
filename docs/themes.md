@@ -31,3 +31,15 @@ The art was generated with the built-in ImageGen tool, then prepared for native 
 **App sheets:** Exactly three columns by two rows of equal square cells, edge-to-edge with no gutters or UI border. Draw the six subjects listed above in row-major order, keeping each fully inside its own cell with safe margins. Match the chosen theme's material and palette. No names, wordmarks, selection highlights or rounded framing. Crop cells independently for the native renderer. Pixel tiles are quantized and nearest-neighbor resized; other art retains detailed continuous tones.
 
 Generated PNGs are included so reproducing the exact live art does not require another generation. Brand references identify the corresponding apps; they do not imply affiliation or trademark rights. See [NOTICE.md](../NOTICE.md).
+
+## Living motion
+
+| Theme | Background | Selected tile |
+| --- | --- | --- |
+| Cinematic | Drifting valley mist and two distant pterosaur glides | Apple TV sauropod blink |
+| 8-bit Jungle | Pixel clouds and a gliding pixel pterosaur | Prime Video raptor blink |
+| Fossil Club | Slow raking museum light across the limestone | Prime Video fossil amber-light pulse |
+| Dino Den | Clay volcano smoke and a gliding pterosaur | Netflix baby dinosaur blink |
+| Neon District | Hovercar traffic and waterfront mist | Netflix robot-cat blink |
+
+Motion Off removes scene layers and alternate frames. Effects pause away from foreground Home. Pterosaurs use a gliding pose; wing deformation is not implemented. See [living scenes](living-scenes.md) and the linked per-pack ImageGen prompts/preparation notes.

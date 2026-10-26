@@ -37,6 +37,7 @@ public sealed class ThemeSceneLayer
 }
 public sealed class ThemeTileMotion
 {
+ public string Kind {get;set;}="blink";
  public string Image {get;set;}
  public int Seconds {get;set;}=6;
 }
@@ -80,7 +81,7 @@ public sealed class ThemePack
  static readonly HashSet<string> Fields=new HashSet<string>{"schemaVersion","id","name","order","background","preview","icons","palette","cornerRadius","pixelArt","animationMs","motion","fontFamily","fontVariants","fontFile","fontLicense","license"};
  static readonly HashSet<string> MotionFields=new HashSet<string>{"effect","count","seconds","iconFloat","layers","tiles"};
  static readonly HashSet<string> SceneFields=new HashSet<string>{"asset","color","x","y","width","height","toX","toY","seconds","opacity","phase","kind"};
- static readonly HashSet<string> TileFields=new HashSet<string>{"image","seconds"};
+ static readonly HashSet<string> TileFields=new HashSet<string>{"image","seconds","kind"};
  static readonly HashSet<string> PaletteFields=new HashSet<string>{"background","text","muted","accent","card","control","caption","overlay","header","footer"};
  public static bool ValidId(string id)=>id!=null&&Regex.IsMatch(id,@"\A[a-z0-9][a-z0-9-]{0,47}\z");
  public string ScenePath(ThemeSceneLayer layer)=>Asset(layer.Asset);
@@ -176,7 +177,7 @@ public sealed class ThemePack
   }
   if(sceneArea>4147200)throw new InvalidDataException("Scene composition exceeds two screen areas.");
   foreach(var tile in pack.Motion.Tiles){
-   if(!ValidId(tile.Key)||!pack.Icons.ContainsKey(tile.Key)||tile.Value==null||tile.Value.Image==null||tile.Value.Seconds<3||tile.Value.Seconds>20)throw new InvalidDataException("Invalid tile animation.");
+   if(!ValidId(tile.Key)||!pack.Icons.ContainsKey(tile.Key)||tile.Value==null||tile.Value.Image==null||tile.Value.Seconds<3||tile.Value.Seconds>20||!new[]{"blink","pulse","flutter"}.Contains(tile.Value.Kind))throw new InvalidDataException("Invalid tile animation.");
    images.Add(tile.Value.Image);
   }
   foreach(string relative in images){string file=pack.Asset(relative);pixelBudget+=PngPixels(file);if(uniqueFiles.Add(file))encodedBudget+=new FileInfo(file).Length;}
