@@ -24,14 +24,14 @@ public sealed partial class QuietHome
   ClearAlternateTile();
   if(floatingIcon!=null){floatingIcon.Position=iconRest;floatingIcon=null;}
  }
- void ClearMotion(){StopIconMotion();foreach(var animation in ambientAnimations){animation.Stop();animation.Dispose();}ambientAnimations.Clear();particleCount=0;sceneLayerCount=0;sceneImages.Clear();}
+ void ClearMotion(){StopIconMotion();foreach(var animation in ambientAnimations){animation.Stop();animation.Dispose();}ambientAnimations.Clear();ClearSkyMotion();particleCount=0;sceneLayerCount=0;sceneImages.Clear();}
  void PauseMotion(){
   motionPaused=true;
-  foreach(var animation in ambientAnimations)animation.Pause();
+  foreach(var animation in ambientAnimations)animation.Pause();foreach(var animation in skyAnimations)animation.Pause();
   StopIconMotion();
   if(focusAnimation!=null){focusAnimation.Stop();focusAnimation.Dispose();focusAnimation=null;}
  }
- void ResumeMotion(){motionPaused=false;if(MotionActive)foreach(var animation in ambientAnimations)animation.Play();UpdateIconMotion();}
+ void ResumeMotion(){motionPaused=false;if(MotionActive){foreach(var animation in ambientAnimations)animation.Play();foreach(var animation in skyAnimations)animation.Play();}UpdateIconMotion();}
  void BuildAmbientMotion(){try{BuildSceneMotion();BuildAmbientMotionCore();}catch(Exception error){ClearMotion();motionError=error.GetType().Name;}}
  void BuildAmbientMotionCore(){
   if(page!=0||motion=="off"||currentTheme.Motion.Effect=="none")return;

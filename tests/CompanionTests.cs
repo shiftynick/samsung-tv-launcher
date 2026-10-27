@@ -31,6 +31,11 @@ public static class CompanionTests
   public string PageFile=>Page;
   public void PhotosChanged()=>PhotoChanges++;
   public void Paired(string name)=>PairedName=name;
+  public SkySettings SkySettings=new SkySettings();public string Previewed;
+  public object Sky()=>new{enabled=SkySettings.Enabled,place=SkySettings.Place};
+  public string SetSky(SkySettings s){try{SkySettings.Validate(s);}catch(InvalidDataException e){return e.Message;}SkySettings=s;return null;}
+  public List<PlaceMatch> SearchPlaces(string q){if((q??"").Trim().Length<2)throw new InvalidDataException("Enter a city or postcode.");return new List<PlaceMatch>{new PlaceMatch{Name="Springfield",Latitude=1,Longitude=2}};}
+  public string PreviewSky(string p,string c,string s){if(Array.IndexOf(global::Sky.Phases,p)<0||Array.IndexOf(global::Sky.Weathers,c)<0||Array.IndexOf(global::Sky.Seasons,s)<0)return "Unknown scene.";Previewed=p+"/"+c+"/"+s;return null;}
  }
 
  public static void Main()
@@ -146,6 +151,13 @@ public static class CompanionTests
     Check(Send(HttpMethod.Get,"/api/photos/"+file).StatusCode==HttpStatusCode.Unauthorized,"Photos must need a token");
     Check(Send(HttpMethod.Get,"/api/photos/images/..%2Fphotos.jpg",bearer:t).StatusCode==HttpStatusCode.NotFound,"Path tricks must not read files");
     Check(Send(HttpMethod.Delete,"/api/photos/"+file,bearer:t).StatusCode==HttpStatusCode.OK&&host.PhotoChanges==2,"Delete must succeed and notify");
+    Check(Send(HttpMethod.Get,"/api/sky").StatusCode==HttpStatusCode.Unauthorized,"Scene settings must need a token");
+    Check(Send(HttpMethod.Put,"/api/sky","{\"enabled\":true,\"weather\":true,\"latitude\":39.7392,\"longitude\":-104.9903,\"place\":\"Springfield\",\"units\":\"f\"}",t).StatusCode==HttpStatusCode.OK&&host.SkySettings.Latitude==39.74,"Scene settings must reach the launcher, rounded");
+    Check(Send(HttpMethod.Put,"/api/sky","{\"enabled\":true,\"weather\":true,\"place\":\"\",\"units\":\"f\"}",t).StatusCode==HttpStatusCode.BadRequest,"Weather without a location must be a 400");
+    Check(Send(HttpMethod.Post,"/api/sky/search","{\"query\":\"Springfield\"}",t).Content.ReadAsStringAsync().Result.Contains("Springfield"),"Place search must return matches");
+    Check(Send(HttpMethod.Post,"/api/sky/search","{\"query\":\"\"}",t).StatusCode==HttpStatusCode.BadRequest,"Empty place search must be a 400");
+    Check(Send(HttpMethod.Post,"/api/sky/preview","{\"phase\":\"night\",\"condition\":\"snow\",\"season\":\"winter\"}",t).StatusCode==HttpStatusCode.OK&&host.Previewed=="night/snow/winter","Scene preview must reach the launcher");
+    Check(Send(HttpMethod.Post,"/api/sky/preview","{\"phase\":\"noon\",\"condition\":\"snow\",\"season\":\"winter\"}",t).StatusCode==HttpStatusCode.BadRequest,"Unknown preview must be a 400");
     Check(Send(HttpMethod.Post,"/api/unpair",bearer:t).StatusCode==HttpStatusCode.OK&&Send(HttpMethod.Get,"/api/state",bearer:t).StatusCode==HttpStatusCode.Unauthorized,"Unpair must revoke this phone");
    }
    // QR: decoded with zbarimg during development; here, structure and bounds.
@@ -159,6 +171,34 @@ public static class CompanionTests
    static IPAddress V4(params byte[] b)=>new IPAddress(b);
    Check(CompanionServer.PrivateAddress(V4(192,168,1,5))&&CompanionServer.PrivateAddress(V4(10,0,0,1))&&CompanionServer.PrivateAddress(V4(172,20,0,1))&&CompanionServer.PrivateAddress(V4(192,168,0,2).MapToIPv6()),"Private ranges must be allowed");
    Check(!CompanionServer.PrivateAddress(IPAddress.Parse("8.8.8.8"))&&!CompanionServer.PrivateAddress(IPAddress.Parse("172.32.0.1"))&&!CompanionServer.PrivateAddress(IPAddress.Parse("2001:db8::1")),"Public addresses must be refused");
+   // Reactive scenes.
+   Check(Sky.SunElevation(new DateTime(2026,6,21,19,0,0,DateTimeKind.Utc),39.74,-104.99)>70&&Sky.SunElevation(new DateTime(2026,6,21,8,0,0,DateTimeKind.Utc),39.74,-104.99)<-20,"Sun elevation must follow the day");
+   Check(Sky.SunElevation(new DateTime(2026,3,20,12,7,0,DateTimeKind.Utc),0,0)>85,"Equinox noon at the equator must be overhead");
+   var city=new SkySettings{Weather=true,Latitude=39.74,Longitude=-104.99,Place="Springfield"};
+   string At(int h,int m)=>Sky.Phase(new DateTime(2026,10,27,h,m,0,DateTimeKind.Utc),DateTime.Now,city);
+   Check(At(13,15)=="dawn"&&At(18,0)=="day"&&At(0,5)=="dusk"&&At(1,30)=="night"&&At(10,0)=="night","Phases must follow sunrise and sunset");
+   var nowhere=new SkySettings();
+   Check(Sky.Phase(DateTime.UtcNow,new DateTime(2026,1,1,7,0,0),nowhere)=="dawn"&&Sky.Phase(DateTime.UtcNow,new DateTime(2026,1,1,12,0,0),nowhere)=="day"&&Sky.Phase(DateTime.UtcNow,new DateTime(2026,1,1,19,0,0),nowhere)=="dusk"&&Sky.Phase(DateTime.UtcNow,new DateTime(2026,1,1,23,0,0),nowhere)=="night","Without a location the clock must decide");
+   Check(Sky.Season(new DateTime(2026,10,27),39.74)=="autumn"&&Sky.Season(new DateTime(2026,1,5),39.74)=="winter"&&Sky.Season(new DateTime(2026,1,5),-33.9)=="summer","Seasons must follow month and hemisphere");
+   Check(Sky.WeatherKind(0)=="clear"&&Sky.WeatherKind(2)=="cloudy"&&Sky.WeatherKind(45)=="fog"&&Sky.WeatherKind(63)=="rain"&&Sky.WeatherKind(81)=="rain"&&Sky.WeatherKind(73)=="snow"&&Sky.WeatherKind(86)=="snow"&&Sky.WeatherKind(95)=="storm","Weather codes must map to scenes");
+   Check(!Sky.KnownCode(4)&&!Sky.KnownCode(-1)&&Sky.KnownCode(99),"Unknown weather codes must be refused");
+   var nowUtc=new DateTime(2026,10,27,15,0,0,DateTimeKind.Utc);
+   var reading=WeatherReading.Parse("{\"current\":{\"time\":\"x\",\"temperature_2m\":71.6,\"weather_code\":61}}","f",nowUtc);
+   Check(Sky.Temperature(reading)=="72°F"&&Sky.Describe(reading.Code)=="Light rain","Reading must parse and format");
+   Check(Sky.Current(nowUtc,nowUtc,city,reading).Weather=="rain"&&Sky.Current(nowUtc.AddHours(4),nowUtc,city,reading).Weather=="clear","Stale weather must be ignored");
+   Check(Sky.Current(nowUtc,nowUtc,new SkySettings{Weather=false,Latitude=39.74,Longitude=-104.99,Place="x"},reading).Weather=="clear","Weather off must ignore readings");
+   Reject(()=>WeatherReading.Parse("{\"current\":{\"temperature_2m\":20,\"weather_code\":4}}","c",nowUtc),"Unknown weather code accepted");
+   Reject(()=>SkySettings.Validate(new SkySettings{Latitude=91,Place="x"}),"Out-of-range latitude accepted");
+   Reject(()=>SkySettings.Validate(new SkySettings{Units="k"}),"Unknown units accepted");
+   Reject(()=>SkySettings.Validate(new SkySettings{Place=new string('x',61)}),"Long place accepted");
+   string skyFile=Path.Combine(root,"sky.json");
+   SkySettings.Save(skyFile,new SkySettings{Weather=true,Latitude=39.7392,Longitude=-104.9903,Place=" Springfield ",Units="c"});
+   var skyLoaded=SkySettings.Load(skyFile);Check(skyLoaded.Latitude==39.74&&skyLoaded.Longitude==-104.99&&skyLoaded.Place=="Springfield"&&skyLoaded.Units=="c","Scene settings must persist rounded and trimmed");
+   File.WriteAllText(skyFile,"{bad");Check(SkySettings.Load(skyFile).Enabled&&!SkySettings.Load(skyFile).Weather,"Corrupt scene settings must fall back to defaults");
+   string weatherFile=Path.Combine(root,"weather.json");WeatherReading.Save(weatherFile,reading);Check(WeatherReading.Load(weatherFile)?.Code==61,"Weather cache must persist");
+   var places=WeatherClient.ParseSearch("{\"results\":[{\"name\":\"Springfield\",\"admin1\":\"State\",\"country_code\":\"US\",\"latitude\":39.7817,\"longitude\":-89.6501},{\"admin1\":\"no name\"}]}");
+   Check(places.Count==1&&places[0].Name=="Springfield, State, US"&&places[0].Latitude==39.78,"Place search must parse, label and round");
+   Check(WeatherClient.ParseSearch("{}").Count==0,"No results must be an empty list");
    Console.WriteLine("Companion pairing, layout, photo store and HTTP API: "+checks+" checks passed.");
   }finally{Directory.Delete(root,true);}
  }

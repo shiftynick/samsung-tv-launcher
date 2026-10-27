@@ -8,6 +8,8 @@ The launcher can serve a small web page to phones on your home network. From it 
 2. Scan the QR code with the phone camera, or open the address shown (for example `http://192.0.2.50:47801`) and type the six-digit code.
 3. The phone keeps a token in its browser storage. Later visits open straight to the controls.
 
+The **Scenes** section controls [reactive scenes](reactive-scenes.md).
+
 **Forget phones** on the TV revokes every phone; **Unpair this phone** on the page revokes only that one. Turning phone access off stops the server.
 
 ## How it works
@@ -24,4 +26,3 @@ The launcher can serve a small web page to phones on your home network. From it 
 
 - Traffic is plain HTTP on the local network. Anyone who can watch your Wi-Fi traffic could copy a token; use it on a network you trust.
 - HDMI 1 and 2 use source IDs 13 and 14 by analogy with the verified HDMI 3 (15); only HDMI 3 has been confirmed on the recorded TV.
-- If the TV freezes the launcher while another app is in the foreground, the page may not respond until you return to Home.

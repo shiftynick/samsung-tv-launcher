@@ -48,6 +48,8 @@ button:disabled{opacity:.5}
 #toast.bad{background:#5a221c}
 .hidden{display:none}
 small{color:var(--muted)}
+.list{display:grid;gap:6px;margin-top:8px}
+.list button{text-align:left}
 </style>
 </head>
 <body>
@@ -73,6 +75,24 @@ small{color:var(--muted)}
   <section>
    <h2>Motion</h2>
    <div id="motion" class="seg"></div>
+  </section>
+  <section>
+   <h2>Scenes</h2>
+   <p>Home follows the time of day and the season, and the local weather once you choose a place.</p>
+   <div id="skyOn" class="seg"></div>
+   <p id="skyNow" style="margin:12px 0 0"></p>
+   <div id="skyMore">
+    <label for="place">Place for weather</label>
+    <div class="row"><input id="place" maxlength="60" placeholder="City or postcode" enterkeyhint="search"><button id="findPlace" style="flex:0 0 auto">Find</button></div>
+    <div id="places" class="list"></div>
+    <label>Weather</label>
+    <div id="skyWeather" class="seg"></div>
+    <label>Temperature</label>
+    <div id="skyUnits" class="seg"></div>
+    <label>Preview on the TV for a minute</label>
+    <div class="row"><select id="pvPhase"></select><select id="pvCondition"></select><select id="pvSeason"></select></div>
+    <button id="preview" style="width:100%;margin-top:8px">Show preview</button>
+   </div>
   </section>
   <section>
    <h2>Home tiles</h2>
@@ -142,8 +162,39 @@ async function load(){
  renderThemes();renderMotion();
  apps=state.apps.map(a=>({...a}));renderApps();$("slots").textContent=state.homeSlots;
  $("hdmiLabel").value=state.hdmiLabel;$("hdmiSource").replaceChildren(...state.hdmiInputs.map(i=>el("option",{value:i.source,textContent:i.name,selected:i.source===state.hdmiSource})));
- loadPhotos();
+ loadPhotos();loadSky();
 }
+let sky=null;
+const cap=t=>t[0].toUpperCase()+t.slice(1);
+async function loadSky(){try{sky=await api("GET","/api/sky");}catch(e){$("skyNow").textContent=e.message;return;}renderSky();}
+function seg(id,options,current,pick,disabled){$(id).replaceChildren(...options.map(([v,label])=>el("button",{className:v===current?"on":"",textContent:label,disabled:!!disabled,onclick:()=>pick(v)})));}
+function renderSky(){
+ seg("skyOn",[[true,"On"],[false,"Off"]],sky.enabled,v=>saveSky({enabled:v}));
+ $("skyMore").classList.toggle("hidden",!sky.enabled);
+ const now=sky.preview?"Previewing ":"Now: ";
+ $("skyNow").textContent=sky.enabled?now+cap(sky.season)+" "+sky.phase+(sky.condition!=="clear"?", "+sky.condition:"")+(sky.reading?" · "+sky.reading:"")+(sky.place?" · "+sky.place:"")+(sky.error?" · Last weather check failed":""):"Off. Home shows the theme as designed.";
+ $("place").placeholder=sky.place||"City or postcode";
+ seg("skyWeather",[[true,"On"],[false,"Off"]],sky.weather,v=>saveSky({weather:v}),!sky.place);
+ seg("skyUnits",[["f","°F"],["c","°C"]],sky.units,v=>saveSky({units:v}));
+ for(const [id,list,value] of [["pvPhase",sky.phases,sky.phase],["pvCondition",sky.conditions,sky.condition],["pvSeason",sky.seasons,sky.season]])
+  if(!$(id).options.length)$(id).replaceChildren(...list.map(v=>el("option",{value:v,textContent:cap(v),selected:v===value})));
+}
+let skyPlace=null;
+async function saveSky(change){
+ const next={enabled:sky.enabled,weather:sky.weather,place:sky.place,units:sky.units,latitude:skyPlace?.latitude??sky.latitude??0,longitude:skyPlace?.longitude??sky.longitude??0,...change};
+ try{await api("PUT","/api/sky",next);toast("Saved on the TV.");}catch(e){toast(e.message,true);}
+ loadSky();
+}
+$("findPlace").onclick=async()=>{
+ const q=$("place").value.trim();if(!q)return;
+ $("findPlace").disabled=true;
+ try{const r=await api("POST","/api/sky/search",{query:q});
+  $("places").replaceChildren(...(r.places.length?r.places.map(p=>el("button",{textContent:p.name,onclick:async()=>{skyPlace=p;$("places").replaceChildren();$("place").value="";await saveSky({place:p.name,latitude:p.latitude,longitude:p.longitude,weather:true});}})):[el("p",{textContent:"No places found."})]));
+ }catch(e){toast(e.message,true);}
+ $("findPlace").disabled=false;
+};
+$("place").onkeydown=e=>{if(e.key==="Enter")$("findPlace").click();};
+$("preview").onclick=async()=>{try{await api("POST","/api/sky/preview",{phase:$("pvPhase").value,condition:$("pvCondition").value,season:$("pvSeason").value});toast("Showing on the TV for a minute.");loadSky();}catch(e){toast(e.message,true);}};
 function renderThemes(){
  $("themes").replaceChildren(...state.themes.map(t=>{
   const img=el("div",{className:"ph"});

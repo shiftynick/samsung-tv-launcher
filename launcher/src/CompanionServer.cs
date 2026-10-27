@@ -22,6 +22,10 @@ public interface ICompanionHost
  string PageFile {get;}
  void PhotosChanged();
  void Paired(string name);
+ object Sky();
+ string SetSky(SkySettings settings);
+ List<PlaceMatch> SearchPlaces(string query);
+ string PreviewSky(string phase,string condition,string season);
 }
 
 // A small HTTP API for the phone companion. It answers only private-network
@@ -88,6 +92,10 @@ public sealed class CompanionServer : IDisposable
   if(method=="POST"&&path=="/api/unpair"){access.Forget(phone.Id);Reply(c,200,new{ok=true});return;}
   var preview=Regex.Match(path,@"\A/api/themes/([a-z0-9-]{1,40})/preview\z");
   if(method=="GET"&&preview.Success){string file=host.ThemePreview(preview.Groups[1].Value);if(file==null)Reply(c,404,new{error="No preview."});else Send(c,200,File.ReadAllBytes(file),"image/png","private, max-age=3600");return;}
+  if(method=="GET"&&path=="/api/sky"){Reply(c,200,host.Sky());return;}
+  if(method=="PUT"&&path=="/api/sky"){Result(c,host.SetSky(JsonSerializer.Deserialize<SkySettings>(Body(c,MaxJson),Json)));return;}
+  if(method=="POST"&&path=="/api/sky/search"){Search(c);return;}
+  if(method=="POST"&&path=="/api/sky/preview"){var b=JsonDocument.Parse(Body(c,MaxJson)).RootElement;Result(c,host.PreviewSky(Text(b,"phase"),Text(b,"condition"),Text(b,"season")));return;}
   if(path=="/api/photos"&&method=="GET"){Photos(c);return;}
   if(path=="/api/photos"&&method=="POST"){Upload(c);return;}
   var image=Regex.Match(path,@"\A/api/photos/(images/[a-z0-9-]+\.jpg)\z");
@@ -122,11 +130,15 @@ public sealed class CompanionServer : IDisposable
    host.PhotosChanged();Reply(c,200,new{file});
   }catch(InvalidDataException e){Reply(c,400,new{error=e.Message});}
  }
- string Field(HttpListenerContext c,string name)
+ void Search(HttpListenerContext c)
  {
-  var root=JsonDocument.Parse(Body(c,MaxJson)).RootElement;
-  return root.ValueKind==JsonValueKind.Object&&root.TryGetProperty(name,out var v)&&v.ValueKind==JsonValueKind.String?v.GetString():"";
+  string query=Text(JsonDocument.Parse(Body(c,MaxJson)).RootElement,"query");
+  try{Reply(c,200,new{places=host.SearchPlaces(query)});}
+  catch(InvalidDataException e){Reply(c,400,new{error=e.Message});}
+  catch(Exception e)when(e is System.Net.Http.HttpRequestException||e is IOException||e is JsonException||e is System.Threading.Tasks.TaskCanceledException){Reply(c,502,new{error="The TV could not reach the place search. Try again."});}
  }
+ static string Text(JsonElement root,string name)=>root.ValueKind==JsonValueKind.Object&&root.TryGetProperty(name,out var v)&&v.ValueKind==JsonValueKind.String?v.GetString():"";
+ string Field(HttpListenerContext c,string name)=>Text(JsonDocument.Parse(Body(c,MaxJson)).RootElement,name);
  void Result(HttpListenerContext c,string error){if(error==null)Reply(c,200,new{ok=true});else Reply(c,400,new{error});}
  void Page(HttpListenerContext c)
  {
