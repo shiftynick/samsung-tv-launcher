@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "synthwave-beach",
+  "name": "Synthwave Beach",
+  "order": 60,
+  "background": "background.png",
+  "icons": {
+    "plex": "plex.png",
+    "netflix": "netflix.png",
+    "apple-tv": "apple-tv.png",
+    "prime-video": "prime-video.png",
+    "youtube": "youtube.png",
+    "youtube-tv": "youtube-tv.png"
+  },
+  "palette": {
+    "background": "#030B29",
+    "text": "#FAF5E6",
+    "muted": "#CDBEC9",
+    "accent": "#EB68BA",
+    "card": "#020718",
+    "control": "#020718B8",
+    "caption": "#020718E0",
+    "overlay": "#02081DDB",
+    "header": "#00000033",
+    "footer": "#000000A3"
+  },
+  "cornerRadius": 18,
+  "pixelArt": false,
+  "animationMs": 160,
+  "fontFamily": "Quiet Inter",
+  "fontVariants": true,
+  "license": "LICENSE.txt"
+}

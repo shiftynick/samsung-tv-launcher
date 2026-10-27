@@ -1,6 +1,6 @@
 # Create and add theme packs
 
-Theme packs are data folders, discovered at runtime. Adding art or a palette does not require rebuilding the TV launcher. The initial installation of a launcher version supporting packs is still required. Five illustrated packs ship with it: Cinematic, 8-bit Jungle, Fossil Club, Dino Den and Neon District. The picker paginates automatically.
+Theme packs are data folders, discovered at runtime. Adding art or a palette does not require rebuilding the TV launcher. The initial installation of a launcher version supporting packs is still required. Six illustrated packs ship with it: Cinematic, 8-bit Jungle, Fossil Club, Dino Den, Neon District and Synthwave Beach. To make a new pack from one prompt, see the [theme generator](theme-generator.md). The picker paginates automatically.
 
 ## Create, clone and validate
 

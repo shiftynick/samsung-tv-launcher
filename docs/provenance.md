@@ -11,3 +11,5 @@ The temporary archive-root access subset originates in [samsung-tv-root](https:/
 Free My TV's earlier design inspiration, Quiet Inter/Inter fonts and Material Symbols retain the notices in [NOTICE.md](../NOTICE.md) and [licenses](../licenses/). The new pixel font is Press Start 2P, distributed under its SIL Open Font License. Related [S90D research in Couchroot](https://github.com/splitcipher/couchroot/blob/main/docs/lab/devices/s90d/README.md) informed use of native setters that preserve Buxton key privileges; no owner-specific state from that project is used.
 
 Only the [verification summary](verification.md) describes this project's hardware evidence. Build/test logs, raw sessions, original app files, account/registry databases, exact network configuration, recovery archives and proprietary references remain private and are not part of this repository or its Git history.
+
+Synthwave Beach was made with [the theme generator](theme-generator.md) using the OpenAI image API; its exact prompts are in the pack's `prompt.json`.

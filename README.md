@@ -1,6 +1,6 @@
 # Samsung TV Launcher
 
-A native Samsung Tizen home screen with switchable themes, six streaming-app shortcuts, HDMI switching, and a way back to Samsung Home. Four dinosaur theme packs and the cyberpunk Neon District are bundled. Built for an owner-controlled **S90D on Tizen 9**, using .NET/NUI and Samsung's existing picture, audio, app, and HDMI stack.
+A native Samsung Tizen home screen with switchable themes, six streaming-app shortcuts, HDMI switching, and a way back to Samsung Home. Four dinosaur theme packs, the cyberpunk Neon District and Synthwave Beach are bundled. Built for an owner-controlled **S90D on Tizen 9**, using .NET/NUI and Samsung's existing picture, audio, app, and HDMI stack.
 
 ![Artwork previews for Cinematic, 8-bit Jungle, Fossil Club and Dino Den](docs/images/themes-overview.png)
 
@@ -10,13 +10,14 @@ A native Samsung Tizen home screen with switchable themes, six streaming-app sho
 
 ## Features
 
-- **Cinematic**, **8-bit Jungle**, **Fossil Club**, **Dino Den**, and **Neon District**, with title-free wallpapers and six custom app illustrations. New data-only packs are discovered at runtime.
+- **Cinematic**, **8-bit Jungle**, **Fossil Club**, **Dino Den**, **Neon District** and **Synthwave Beach**, with title-free wallpapers and six custom app illustrations. New data-only packs are discovered at runtime.
 - All five packs have scene-specific motion: flying creatures/vehicles, mist/clouds/smoke or museum light, plus selected-character blinks or material-light pulses, with a saved **Off / Subtle / Full** control on Home. Effects pause when the launcher leaves the foreground.
 - A remote-friendly theme picker. The selected theme is saved in the launcher's own app data and survives a launcher restart.
 - Shortcuts for **Plex, Netflix, Apple TV, Prime Video, YouTube, and YouTube TV**. These launch installed Tizen apps; they do not replace the apps or provide subscriptions.
 - A [local photo screen](docs/local-photos.md) with album browsing, slideshow controls and metadata-free private exports; no always-on computer is required after installation.
 - A [phone companion](docs/companion.md): scan a QR code on the TV to switch themes, reorder or hide tiles, rename the HDMI shortcut and upload photos from a phone on the same Wi-Fi.
 - [Reactive scenes](docs/reactive-scenes.md): Home follows the time of day, the season and the local weather, with a one-minute preview from the phone.
+- A [theme generator](docs/theme-generator.md): one prompt produces a background, six matching app tiles and a palette with OpenAI's image API.
 - HDMI switching, an input-picker shortcut, quick settings, and access to Samsung's full settings.
 - Optional Home/startup routing to the custom launcher, plus a **Samsung Home** shortcut inside it.
 - Snapshot-first deployment and guarded native routing/rollback helpers. No firmware flashing or permanent root daemon.

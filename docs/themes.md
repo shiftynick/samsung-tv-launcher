@@ -9,6 +9,7 @@ The Themes control discovers packs at runtime. The four dinosaur styles each inc
 | Fossil Club | Ivory limestone, engraved skeletons, mineral-colored fossils and terracotta focus |
 | Dino Den | Clay dinosaur dioramas, warm island sunset and friendly sculpted characters |
 | Neon District | Midnight cyberpunk city, cyan/magenta/amber lighting and six futuristic app illustrations |
+| Synthwave Beach | Retro 80s neon sunset, palm silhouettes and a glowing sand grid; made with the [theme generator](theme-generator.md), prompts in its `prompt.json` |
 
 Assets live in `launcher/assets/app-icons/themes/{cinema,pixel,fossil,den}/`. App names are not embedded in wallpapers. Focus borders, app labels, clock and controls are rendered by NUI. The preference is saved only in the launcher's own writable data directory; unknown or corrupt values fall back to Cinematic or another valid pack; an embedded flat recovery is used only if no packs are valid. Save uses an adjacent temporary file and atomic replacement. Image views for inactive themes are released; the cache is bounded to the active theme.
 
