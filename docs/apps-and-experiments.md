@@ -16,7 +16,7 @@ Sources: [TV web-app quick start](https://docs.stg.tizen.org/application/web/get
 
 ## Privacy and performance sequence
 
-The S90D inventory found active advertising/analytics/recognition-related units and enabled app preloading. It did not establish ACR consent or actual transmitted content. Recent memory-pressure averages were zero; compressed swap occupancy alone was not evidence of a problem. No system-service cleanup or preload change has been applied.
+The S90D inventory found active advertising/analytics/recognition-related units and enabled app preloading. It did not establish ACR consent or actual transmitted content. Recent memory-pressure averages were zero; compressed swap occupancy alone was not evidence of a problem. No system-service cleanup or preload change has been applied. A DNS/socket baseline and a temporary three-hostname trial are recorded in the [S90D privacy audit](s90d-privacy-audit.md).
 
 Start with Viewing Information Services/ACR and other optional advertising/voice consents. Samsung documents ACR as optional and allows changing it through Settings. Next, take a private DNS/network baseline and compare opt-out effects, then evaluate a narrow reversible service/preload experiment. Preserve streaming authentication, DRM, updates, HDMI, sound, networking, Bluetooth, accessibility and OLED care. Measure startup/app latency before promising performance gains. DNS-only filtering has blind spots and broad Samsung blocking can break required features.
 

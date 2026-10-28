@@ -1,4 +1,4 @@
-> **Upstream research scope:** this page records the original U8000F case study. It is not evidence that these cleanup/settings operations were applied or validated on the S90D. For this project use [S90D setup](10-s90d-setup.md), [verification](verification.md), and [Home routing](11-home-routing.md).
+> **Upstream research scope:** this page records the original U8000F case study. It is not evidence that these cleanup/settings operations were applied or validated on the S90D. For this project use the [S90D privacy audit](s90d-privacy-audit.md), [S90D setup](10-s90d-setup.md), [verification](verification.md), and [Home routing](11-home-routing.md).
 
 # What the privacy cleanup means
 

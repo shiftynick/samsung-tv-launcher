@@ -37,7 +37,7 @@ A native Samsung Tizen home screen with switchable themes, six streaming-app sho
 | HDMI | Owner confirmed switching to the connected HDMI device |
 | YouTube TV | Installed app ID verified and shortcut included; playback not separately verified |
 | Home/startup routing | Native readback and unchanged Buxton privileges verified; owner confirmed Home/Samsung Home round trip and automatic launch after a full TV restart |
-| Privacy cleanup | **Not applied or audited on this S90D** |
+| Privacy | [DNS/socket baseline](docs/s90d-privacy-audit.md) recorded over about 22 hours with an overnight gap; three ad hostnames temporarily overridden (cleared by a reboot). No service cleanup applied |
 
 Other sizes, regions, models, and firmware builds are unverified. A successful root check does not establish launcher, Home routing, or cleanup compatibility. This is a model-specific project, not a universal Samsung installer, a replacement OS, or an Android launcher.
 
@@ -84,7 +84,7 @@ See [custom app/game ideas and privacy/performance experiments](docs/apps-and-ex
 
 ## Privacy and publication
 
-The launcher itself has no telemetry/network client. This does **not** remove or prove the absence of Samsung or streaming-app tracking. A different Home screen changes the UI; Samsung's OS and third-party apps continue running. See [privacy scope](docs/08-privacy.md).
+The launcher sends no telemetry. Its only internet requests are optional [weather lookups](docs/reactive-scenes.md) to Open-Meteo, and the [phone companion](docs/companion.md) answers only on the local network. A different Home screen does **not** remove or prove the absence of Samsung or streaming-app tracking. A different Home screen changes the UI; Samsung's OS and third-party apps continue running. See the [S90D privacy audit](docs/s90d-privacy-audit.md) for what was measured on this TV, and [privacy scope](docs/08-privacy.md) for upstream research on another model.
 
 This repository was assembled from an explicit source/artwork allowlist, without local Git history. It excludes real LAN addresses, device/account identifiers, TV photos, traffic captures, session logs, original Samsung binaries, firmware, SDK/reference DLLs, credentials, database snapshots, and recovery archives. Source art metadata was stripped for publication. Live configuration, downloaded app artwork and backups belong in ignored `.local/` or `apps.local.json` paths. Run `python3 tools/audit_public.py` against the staged publish set before publishing changes.
 

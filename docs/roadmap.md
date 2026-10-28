@@ -26,7 +26,7 @@ Start with documented consent controls: Viewing Information Services/ACR, intere
 
 Next, capture a private network/DNS baseline and validate opt-outs. If needed, add narrowly selected DNS/firewall rules and separately verified service changes, with rollback and tests for every streaming app, app updates, authentication, DRM and HDMI. Blocking all Samsung destinations can break useful functions. A clean Home screen is not evidence that background tracking is stopped; a missing process is not a decrypted traffic audit. Raw viewing/account/device traffic remains private and must never be published as an issue attachment.
 
-A private read-only S90D service/process/settings inventory has been collected. It does not establish consent state or actual data transmission. No S90D privacy cleanup or traffic audit has been performed yet.
+A private read-only S90D service/process/settings inventory has been collected. A DNS and socket baseline followed, then a temporary, reversible override of three ad hostnames; see the [S90D privacy audit](s90d-privacy-audit.md). No decrypted traffic audit or service cleanup has been performed, and no block is persistent.
 
 ## Theme packs
 
